@@ -15,5 +15,9 @@ test() {
 
 test 0 0
 test 10 10
+test 3 "1 + 2"
+test 6 "3 * 2"
+test 2 "4 / 2"
+test 14 " 3*2 + 2*4"
 
 echo OK
