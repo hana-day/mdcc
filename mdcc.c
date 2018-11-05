@@ -42,9 +42,20 @@ Node *new_node_num(int val) {
 }
 
 
+static Node *add_expr();
+
 static Node *cast_expr() {
     if (tokens[pos].ty == TK_NUM) {
         return new_node_num(tokens[pos++].val);
+    }
+    if (tokens[pos].ty == '(') {
+        pos++;
+        Node *node = add_expr();
+        if (tokens[pos].ty != ')') {
+            err("No closing parenthesis.");
+        }
+        pos++;
+        return node;
     }
     err("Unexpected token %d.\n", tokens[pos].ty);
 }
