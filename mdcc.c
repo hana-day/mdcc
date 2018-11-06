@@ -138,6 +138,11 @@ int main(int argc, char **argv) {
     if (argc == 1)
         usage();
 
+    if (strcmp(argv[1], "-test") == 0) {
+        test();
+        return 0;
+    }
+
     buf = argv[1];
     tokenize();
 
