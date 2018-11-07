@@ -2,6 +2,7 @@
 
 char *buf;
 Token tokens[100];
+Map *keywords;
 int pos;
 
 __attribute__((noreturn)) void err(char *fmt, ...) {
@@ -19,11 +20,33 @@ void usage() {
 }
 
 
+void load_keywords() {
+    keywords = new_map();
+    map_set(keywords, "int", (void *)TK_INT);
+}
+
+
+static bool consume(int ty) {
+    if (tokens[pos].ty != ty)
+        return false;
+    pos++;
+    return true;
+}
+
 Token* new_token() {
     Token *tok = malloc(sizeof(Token));
     return tok;
 }
 
+
+static void expect(int ty) {
+    Token t = tokens[pos];
+    if (t.ty == ty) {
+        pos++;
+        return;
+    }
+    err("Bad token %c", ty);
+}
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
     Node *node = malloc(sizeof(Node));
@@ -38,6 +61,13 @@ Node *new_node_num(int val) {
     Node *node = malloc(sizeof(Node));
     node->ty = ND_NUM;
     node->val = val;
+    return node;
+}
+
+
+Node *new_node_null() {
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_NULL;
     return node;
 }
 
@@ -85,6 +115,40 @@ static Node *add_expr() {
 }
 
 
+static Node *expr_stmt() {
+    if (consume(';'))
+        return new_node_null();
+    return add_expr();
+}
+
+
+static Node *stmt() {
+    return expr_stmt();
+}
+
+static Node *compound_stmt() {
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_COMP_STMT;
+    Vector *v = new_vec();
+    while (!consume('}')) {
+        vec_push(v, stmt());
+    }
+    node->stmts = v;
+    return node;
+}
+
+
+static Node *parse() {
+    Node *node;
+    if (consume('{')) {
+        node = compound_stmt();
+    } else {
+        node = add_expr();
+    }
+    return node;
+}
+
+
 static void tokenize() {
     int i = 0;
     while (*buf) {
@@ -99,6 +163,15 @@ static void tokenize() {
             buf++;
             continue;
         }
+        if (isalpha(*buf) || *buf == '_') {
+            int slen = 0;
+            while (isalpha(buf[slen]) || isdigit(buf[slen]) || buf[slen] == '_')
+                slen++;
+            char *ident = strndup(buf, slen);
+            tokens[i].ty = (int)map_get_def(keywords, ident, (void *)TK_IDENT);
+            tokens[i].name = ident;
+            buf += slen;
+        }
         tokens[i].ty = *buf;
         buf++;
         i++;
@@ -107,31 +180,65 @@ static void tokenize() {
 }
 
 void gen(Node *node) {
-    if (node->ty == ND_NUM) {
+    switch (node->ty) {
+    case ND_NUM:
         printf("  push %d\n", node->val);
         return;
-    }
-    gen(node->lhs);
-    gen(node->rhs);
-
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
-
-    switch (node->ty) {
+    case ND_COMP_STMT:
+        for (int i = 0; i < node->stmts->len; i++) {
+            Node *stmt = node->stmts->data[i];
+            if (stmt->ty == ND_NULL)
+                break;
+            gen(stmt);
+            printf("  pop rax\n");
+        }
+        break;
+    case ND_NULL:
+        break;
     case '+':
+        gen(node->lhs);
+        gen(node->rhs);
+
+        printf("  pop rdi\n");
+        printf("  pop rax\n");
+
         printf("  add rax, rdi\n");
+        printf("  push rax\n");
         break;
     case '-':
+        gen(node->lhs);
+        gen(node->rhs);
+
+        printf("  pop rdi\n");
+        printf("  pop rax\n");
+
         printf("  sub rax, rdi\n");
+        printf("  push rax\n");
         break;
     case '*':
+        gen(node->lhs);
+        gen(node->rhs);
+
+        printf("  pop rdi\n");
+        printf("  pop rax\n");
+
         printf("  imul rax, rdi\n");
+        printf("  push rax\n");
         break;
     case '/':
+        gen(node->lhs);
+        gen(node->rhs);
+
+        printf("  pop rdi\n");
+        printf("  pop rax\n");
+
         printf("  mov rdx, 0\n");
         printf("  div rdi\n");
+        printf("  push rax\n");
+        break;
+    default:
+        err("Unknown node type %c", node->ty);
     }
-    printf("  push rax\n");
 }
 
 int main(int argc, char **argv) {
@@ -143,17 +250,18 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    load_keywords();
+
     buf = argv[1];
     tokenize();
 
     pos = 0;
-    Node *node = add_expr();
+    Node *node = parse();
 
     printf(".intel_syntax noprefix\n");
     printf(".global _main\n");
     printf("_main:\n");
     gen(node);
-    printf("  pop rax\n");
     printf("  ret\n");
     return 0;
 }

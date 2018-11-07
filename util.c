@@ -41,3 +41,8 @@ void *map_get(Map *map, char *key) {
             return map->vals->data[i];
     return NULL;
 }
+
+void *map_get_def(Map *map, char *key, void *defv) {
+    void *v = map_get(map, key);
+    return v == NULL ? defv : v;
+}

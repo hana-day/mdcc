@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdbool.h>
 
 
 typedef struct {
@@ -28,15 +29,20 @@ typedef struct {
 Map *new_map(void);
 void map_set(Map *map, char *key, void *val);
 void *map_get(Map *map, char *key);
+void *map_get_def(Map *map, char *key, void *defv);
 
 
 enum {
     TK_NUM = 256,
+    TK_INT,
+    TK_IDENT,
     TK_EOF,
 };
 
 enum {
     ND_NUM = 256,
+    ND_COMP_STMT,
+    ND_NULL,
 };
 
 
@@ -52,6 +58,9 @@ typedef struct Node {
     struct Node *lhs;
     struct Node *rhs;
     int val;
+
+    // Vector of statements
+    Vector *stmts;
 } Node;
 
 
