@@ -179,6 +179,36 @@ static void tokenize() {
     tokens[i].ty = TK_EOF;
 }
 
+void gen(Node *node);
+
+void gen_binary(Node *node) {
+    gen(node->lhs);
+    gen(node->rhs);
+
+    printf("  pop rdi\n");
+    printf("  pop rax\n");
+
+    switch (node->ty) {
+    case '+':
+        printf("  add rax, rdi\n");
+        break;
+    case '-':
+        printf("  sub rax, rdi\n");
+        break;
+    case '*':
+        printf("  imul rax, rdi\n");
+        break;
+    case '/':
+        printf("  mov rdx, 0\n");
+        printf("  div rdi\n");
+        break;
+    default:
+        err("Unknown binary operator");
+    }
+    printf("  push rax\n");
+}
+
+
 void gen(Node *node) {
     switch (node->ty) {
     case ND_NUM:
@@ -196,45 +226,10 @@ void gen(Node *node) {
     case ND_NULL:
         break;
     case '+':
-        gen(node->lhs);
-        gen(node->rhs);
-
-        printf("  pop rdi\n");
-        printf("  pop rax\n");
-
-        printf("  add rax, rdi\n");
-        printf("  push rax\n");
-        break;
     case '-':
-        gen(node->lhs);
-        gen(node->rhs);
-
-        printf("  pop rdi\n");
-        printf("  pop rax\n");
-
-        printf("  sub rax, rdi\n");
-        printf("  push rax\n");
-        break;
     case '*':
-        gen(node->lhs);
-        gen(node->rhs);
-
-        printf("  pop rdi\n");
-        printf("  pop rax\n");
-
-        printf("  imul rax, rdi\n");
-        printf("  push rax\n");
-        break;
     case '/':
-        gen(node->lhs);
-        gen(node->rhs);
-
-        printf("  pop rdi\n");
-        printf("  pop rax\n");
-
-        printf("  mov rdx, 0\n");
-        printf("  div rdi\n");
-        printf("  push rax\n");
+        gen_binary(node);
         break;
     default:
         err("Unknown node type %c", node->ty);
