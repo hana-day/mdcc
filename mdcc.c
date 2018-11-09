@@ -127,7 +127,9 @@ static Node *expr() {
 static Node *expr_stmt() {
     if (consume(';'))
         return new_node_null();
-    return expr();
+    Node *e = expr();
+    expect(';');
+    return e;
 }
 
 
@@ -138,11 +140,10 @@ static Node *stmt() {
 static Node *compound_stmt() {
     Node *node = malloc(sizeof(Node));
     node->ty = ND_COMP_STMT;
-    Vector *v = new_vec();
+    node->stmts = new_vec();
     while (!consume('}')) {
-        vec_push(v, stmt());
+        vec_push(node->stmts, stmt());
     }
-    node->stmts = v;
     return node;
 }
 
