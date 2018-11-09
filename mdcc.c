@@ -72,7 +72,7 @@ Node *new_node_null() {
 }
 
 
-static Node *add_expr();
+static Node *expr();
 
 static Node *cast_expr() {
     if (tokens[pos].ty == TK_NUM) {
@@ -80,10 +80,17 @@ static Node *cast_expr() {
     }
     if (tokens[pos].ty == '(') {
         pos++;
-        Node *node = add_expr();
+        Node *node = expr();
         if (tokens[pos].ty != ')') {
             err("No closing parenthesis.");
         }
+        pos++;
+        return node;
+    }
+    if (tokens[pos].ty == TK_IDENT) {
+        Node *node = malloc(sizeof(Node));
+        node->ty = ND_IDENT;
+        node->name = strdup(tokens[pos].name);
         pos++;
         return node;
     }
@@ -103,22 +110,24 @@ static Node *mul_expr() {
 }
 
 
-static Node *add_expr() {
+static Node *expr() {
     Node *lhs = mul_expr();
     int ty = tokens[pos].ty;
     if (ty == '+' || ty == '-') {
         pos++;
-        return new_node(ty, lhs, add_expr());
+        return new_node(ty, lhs, expr());
+    } else if (ty == '=' ) {
+        pos++;
+        return new_node(ty, lhs, expr());
     } else {
         return lhs;
     }
 }
 
-
 static Node *expr_stmt() {
     if (consume(';'))
         return new_node_null();
-    return add_expr();
+    return expr();
 }
 
 
@@ -143,7 +152,7 @@ static Node *parse() {
     if (consume('{')) {
         node = compound_stmt();
     } else {
-        node = add_expr();
+        node = expr();
     }
     return node;
 }
@@ -163,14 +172,12 @@ static void tokenize() {
             buf++;
             continue;
         }
-        if (isalpha(*buf) || *buf == '_') {
-            int slen = 0;
-            while (isalpha(buf[slen]) || isdigit(buf[slen]) || buf[slen] == '_')
-                slen++;
-            char *ident = strndup(buf, slen);
-            tokens[i].ty = (int)map_get_def(keywords, ident, (void *)TK_IDENT);
-            tokens[i].name = ident;
-            buf += slen;
+        if (isalpha(*buf)) {
+            tokens[i].ty = TK_IDENT;
+            tokens[i].name = strndup(buf, 1);
+            i++;
+            buf++;
+            continue;
         }
         tokens[i].ty = *buf;
         buf++;
@@ -209,6 +216,17 @@ void gen_binary(Node *node) {
 }
 
 
+void gen_lval(Node *node) {
+    if (node->ty == ND_IDENT) {
+        printf("  mov rax, rbp\n");
+        printf("  sub rax, %d\n",
+               ('z' - node->name[0] + 1) * 8);
+        printf("  push rax\n");
+        return;
+    }
+    err("lvalue is not identifier.");
+}
+
 void gen(Node *node) {
     switch (node->ty) {
     case ND_NUM:
@@ -225,11 +243,29 @@ void gen(Node *node) {
         break;
     case ND_NULL:
         break;
+    case ND_IDENT:
+        gen_lval(node);
+        printf("  pop rax\n");
+        printf("  mov rax, [rax]\n");
+        printf("  push rax\n");
+        return;
+        break;
+    case '=':
+        gen_lval(node->lhs);
+        gen(node->rhs);
+
+        printf("  pop rdi\n");
+        printf("  pop rax\n");
+        printf("  mov [rax], rdi\n");
+        printf("  push rdi\n");
+        return;
+        break;
     case '+':
     case '-':
     case '*':
     case '/':
         gen_binary(node);
+        return;
         break;
     default:
         err("Unknown node type %c", node->ty);

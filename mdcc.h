@@ -42,6 +42,7 @@ enum {
 enum {
     ND_NUM = 256,
     ND_COMP_STMT,
+    ND_IDENT,
     ND_NULL,
 };
 
@@ -58,6 +59,8 @@ typedef struct Node {
     struct Node *lhs;
     struct Node *rhs;
     int val;
+
+    char *name;
 
     // Vector of statements
     Vector *stmts;
