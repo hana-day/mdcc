@@ -74,7 +74,14 @@ Node *new_node_null() {
 
 static Node *expr();
 
-static Node *cast_expr() {
+static Node *primary_expr() {
+    if (tokens[pos].ty == TK_IDENT) {
+        Node *node = malloc(sizeof(Node));
+        node->ty = ND_IDENT;
+        node->name = strdup(tokens[pos].name);
+        pos++;
+        return node;
+    }
     if (tokens[pos].ty == TK_NUM) {
         return new_node_num(tokens[pos++].val);
     }
@@ -87,14 +94,20 @@ static Node *cast_expr() {
         pos++;
         return node;
     }
-    if (tokens[pos].ty == TK_IDENT) {
-        Node *node = malloc(sizeof(Node));
-        node->ty = ND_IDENT;
-        node->name = strdup(tokens[pos].name);
-        pos++;
-        return node;
-    }
     err("Unexpected token %d.\n", tokens[pos].ty);
+}
+
+static Node *postfix_expr() {
+    Node *prim = primary_expr();
+    return prim;
+}
+
+static Node *unary_expr() {
+    return postfix_expr();
+}
+
+static Node *cast_expr() {
+    return unary_expr();
 }
 
 
