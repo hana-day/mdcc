@@ -43,6 +43,7 @@ enum {
     ND_NUM = 256,
     ND_COMP_STMT,
     ND_IDENT,
+    ND_CALL,
     ND_NULL,
 };
 

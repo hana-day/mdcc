@@ -76,11 +76,20 @@ static Node *expr();
 
 static Node *primary_expr() {
     if (tokens[pos].ty == TK_IDENT) {
-        Node *node = malloc(sizeof(Node));
-        node->ty = ND_IDENT;
-        node->name = strdup(tokens[pos].name);
-        pos++;
-        return node;
+        if (tokens[pos+1].ty == '(') {
+            Node *node = malloc(sizeof(Node));
+            node->ty = ND_CALL;
+            node->name = strdup(tokens[pos].name);
+            pos += 2;
+            expect(')');
+            return node;
+        } else {
+            Node *node = malloc(sizeof(Node));
+            node->ty = ND_IDENT;
+            node->name = strdup(tokens[pos].name);
+            pos++;
+            return node;
+        }
     }
     if (tokens[pos].ty == TK_NUM) {
         return new_node_num(tokens[pos++].val);
@@ -98,8 +107,7 @@ static Node *primary_expr() {
 }
 
 static Node *postfix_expr() {
-    Node *prim = primary_expr();
-    return prim;
+    return primary_expr();
 }
 
 static Node *unary_expr() {
@@ -264,6 +272,10 @@ void gen(Node *node) {
         printf("  push rax\n");
         return;
         break;
+    case ND_CALL:
+        printf("  call %s\n", node->name);
+        printf("  push rax\n");
+        break;
     case '=':
         gen_lval(node->lhs);
         gen(node->rhs);
@@ -282,7 +294,7 @@ void gen(Node *node) {
         return;
         break;
     default:
-        err("Unknown node type %c", node->ty);
+        err("Unknown node type %d", node->ty);
     }
 }
 
@@ -302,11 +314,25 @@ int main(int argc, char **argv) {
 
     pos = 0;
     Node *node = parse();
-
     printf(".intel_syntax noprefix\n");
     printf(".global _main\n");
+
+    // Definition of sample function z.
+    // z needs no argument and returns 1.
+    printf("z:\n");
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+    printf("  mov rax, 1\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
+
     printf("_main:\n");
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+
     gen(node);
+
+    printf("  pop rbp\n");
     printf("  ret\n");
     return 0;
 }
