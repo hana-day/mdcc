@@ -213,6 +213,15 @@ static void tokenize() {
             buf += slen;
             continue;
         }
+        if (*buf == '\'') {
+            buf++;
+            tokens[i].ty = TK_NUM;
+            tokens[i].val = *buf;
+            i++;
+            buf++;
+            if (*buf++ != '\'')
+                err("Unclosed character literal.");
+        }
         tokens[i].ty = *buf;
         buf++;
         i++;
@@ -335,6 +344,7 @@ int main(int argc, char **argv) {
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
     printf("  mov rax, 1\n");
+    printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("  ret\n");
 

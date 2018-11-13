@@ -29,4 +29,6 @@ test_ 1 "{ z(); }"
 test_ 3 "{ z() * 2 + 1; }"
 test_ 2 "{ a = 1; b = 2; b; }"
 test_ 3 "{ test1 = 1; test2 = 2; test3 = 3; test4 = 4; test5 = 5; test3; }"
+test_ 48 "{ '0'; }"
+test_ 97 "{ a = 'a'; a;}"
 echo OK
