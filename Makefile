@@ -9,8 +9,10 @@ test: mdcc
 
 $(OBJS): mdcc.h
 
+format:
+	clang-format -i $(SRCS)
+
 clean:
 	rm -f mdcc *.o a.out tmp*
 
-
-.PHONY: clean test
+.PHONY: clean test format
