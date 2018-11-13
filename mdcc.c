@@ -20,6 +20,16 @@ void usage() { err("Usage: mdcc <source file>"); }
 
 bool isnondigit(char c) { return isalpha(c) || c == '_'; }
 
+bool istypename() {
+  Token tok = tokens[pos];
+  return tok.ty == TK_INT;
+}
+
+void load_keywords() {
+  keywords = new_map();
+  map_set(keywords, "int", (void *)TK_INT);
+}
+
 static bool consume(int ty) {
   if (tokens[pos].ty != ty)
     return false;
@@ -41,7 +51,7 @@ static void expect(int ty) {
   err("Bad token %c", ty);
 }
 
-Node *new_node(int ty, Node *lhs, Node *rhs) {
+static Node *new_node(int ty, Node *lhs, Node *rhs) {
   Node *node = malloc(sizeof(Node));
   node->ty = ty;
   node->lhs = lhs;
@@ -49,16 +59,24 @@ Node *new_node(int ty, Node *lhs, Node *rhs) {
   return node;
 }
 
-Node *new_node_num(int val) {
+static Node *new_node_num(int val) {
   Node *node = malloc(sizeof(Node));
   node->ty = ND_NUM;
   node->val = val;
   return node;
 }
 
-Node *new_node_null() {
+static Node *new_node_null() {
   Node *node = malloc(sizeof(Node));
   node->ty = ND_NULL;
+  return node;
+}
+
+static Node *new_node_ident(char *name, Var *var) {
+  Node *node = malloc(sizeof(Node));
+  node->ty = ND_IDENT;
+  node->name = name;
+  node->var = var;
   return node;
 }
 
@@ -75,20 +93,15 @@ static Node *primary_expr() {
       expect(')');
       return node;
     } else {
-      Node *node = malloc(sizeof(Node));
-      node->ty = ND_IDENT;
-      node->name = name;
       Var *var;
       if ((var = map_get(vars, name)) == NULL) {
-        node->var = malloc(sizeof(Var));
-        node->var->name = name;
-        node->var->offset = ++nvars;
-        map_set(vars, name, (void *)node->var);
-      } else {
-        node->var = var;
+        var = malloc(sizeof(Var));
+        var->name = name;
+        var->offset = ++nvars;
+        map_set(vars, name, (void *)var);
       }
       pos++;
-      return node;
+      return new_node_ident(name, var);
     }
   }
   if (tokens[pos].ty == TK_NUM) {
@@ -123,7 +136,11 @@ static Node *mul_expr() {
   }
 }
 
+static void *decl();
+
 static Node *expr() {
+  if (istypename())
+    return decl();
   Node *lhs = mul_expr();
   int ty = tokens[pos].ty;
   if (ty == '+' || ty == '-') {
@@ -143,6 +160,42 @@ static Node *expr_stmt() {
   Node *e = expr();
   expect(';');
   return e;
+}
+
+static int decl_specifier() {
+  if (tokens[pos].ty == TK_INT) {
+    pos++;
+    return TK_INT;
+  }
+  err("Unknown declaration specifier %d", tokens[pos].ty);
+}
+
+static Node *assignment_expr() { return unary_expr(); }
+
+static Node *init_declarator(int ty) {
+  if (tokens[pos].ty != TK_IDENT)
+    err("Bad token %d", tokens[pos].ty);
+  char *name = tokens[pos].name;
+  Var *var = malloc(sizeof(Var));
+  var->name = name;
+  var->offset = ++nvars;
+  map_set(vars, name, (void *)var);
+  pos++;
+  if (consume('=')) {
+    Node *lhs = new_node_ident(name, var);
+    Node *rhs = assignment_expr();
+    return new_node('=', lhs, rhs);
+  } else {
+    return new_node_null();
+  }
+}
+
+static void *decl() {
+  int ty = decl_specifier();
+  if (consume(';'))
+    return new_node_null();
+  Node *node = init_declarator(ty);
+  return node;
 }
 
 static Node *stmt() { return expr_stmt(); }
@@ -185,8 +238,9 @@ static void tokenize() {
       int slen = 0;
       while (isnondigit(buf[slen]) || isdigit(buf[slen]))
         slen++;
-      tokens[i].ty = TK_IDENT;
-      tokens[i].name = strndup(buf, slen);
+      char *name = strndup(buf, slen);
+      tokens[i].ty = (int)map_get_def(keywords, name, (void *)TK_IDENT);
+      tokens[i].name = name;
       i++;
       buf += slen;
       continue;
@@ -306,6 +360,8 @@ int main(int argc, char **argv) {
 
   nvars = 0;
   vars = new_map();
+
+  load_keywords();
 
   buf = argv[1];
   tokenize();
