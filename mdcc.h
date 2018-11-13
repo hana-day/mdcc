@@ -54,12 +54,19 @@ typedef struct {
     int val; // Number value
 } Token;
 
+typedef struct Var {
+    int ty;
+    char *name;
+    int offset;
+} Var;
 
 typedef struct Node {
     int ty; // Node type
     struct Node *lhs;
     struct Node *rhs;
     int val;
+
+    Var *var;
 
     char *name;
 

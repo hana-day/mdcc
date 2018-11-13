@@ -27,4 +27,6 @@ test_ 7 "{ a = 1 + 2 * 3; a;}"
 test_ 2 "{ a = 1; a + 1;}"
 test_ 1 "{ z(); }"
 test_ 3 "{ z() * 2 + 1; }"
+test_ 2 "{ a = 1; b = 2; b; }"
+test_ 3 "{ test1 = 1; test2 = 2; test3 = 3; test4 = 4; test5 = 5; test3; }"
 echo OK

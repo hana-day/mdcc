@@ -4,6 +4,8 @@ char *buf;
 Token tokens[100];
 Map *keywords;
 int pos;
+int nvars;
+Map *vars;
 
 __attribute__((noreturn)) void err(char *fmt, ...) {
     va_list args;
@@ -19,12 +21,9 @@ void usage() {
     err("Usage: mdcc <source file>");
 }
 
-
-void load_keywords() {
-    keywords = new_map();
-    map_set(keywords, "int", (void *)TK_INT);
+bool isnondigit(char c) {
+    return isalpha(c) || c == '_';
 }
-
 
 static bool consume(int ty) {
     if (tokens[pos].ty != ty)
@@ -76,17 +75,27 @@ static Node *expr();
 
 static Node *primary_expr() {
     if (tokens[pos].ty == TK_IDENT) {
+        char *name = strdup(tokens[pos].name);
         if (tokens[pos+1].ty == '(') {
             Node *node = malloc(sizeof(Node));
             node->ty = ND_CALL;
-            node->name = strdup(tokens[pos].name);
+            node->name = name;
             pos += 2;
             expect(')');
             return node;
         } else {
             Node *node = malloc(sizeof(Node));
             node->ty = ND_IDENT;
-            node->name = strdup(tokens[pos].name);
+            node->name = name;
+            Var *var;
+            if ((var = map_get(vars, name)) == NULL) {
+                node->var = malloc(sizeof(Var));
+                node->var->name = name;
+                node->var->offset = ++nvars;
+                map_set(vars, name, (void *)node->var);
+            } else {
+                node->var = var;
+            }
             pos++;
             return node;
         }
@@ -194,11 +203,14 @@ static void tokenize() {
             buf++;
             continue;
         }
-        if (isalpha(*buf)) {
+        if (isnondigit(*buf)) {
+            int slen = 0;
+            while (isnondigit(buf[slen]) || isdigit(buf[slen]))
+                slen++;
             tokens[i].ty = TK_IDENT;
-            tokens[i].name = strndup(buf, 1);
+            tokens[i].name = strndup(buf, slen);
             i++;
-            buf++;
+            buf += slen;
             continue;
         }
         tokens[i].ty = *buf;
@@ -241,8 +253,7 @@ void gen_binary(Node *node) {
 void gen_lval(Node *node) {
     if (node->ty == ND_IDENT) {
         printf("  mov rax, rbp\n");
-        printf("  sub rax, %d\n",
-               ('z' - node->name[0] + 1) * 8);
+        printf("  sub rax, %d\n", node->var->offset * 8);
         printf("  push rax\n");
         return;
     }
@@ -307,7 +318,8 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    load_keywords();
+    nvars = 0;
+    vars = new_map();
 
     buf = argv[1];
     tokenize();
@@ -329,9 +341,11 @@ int main(int argc, char **argv) {
     printf("_main:\n");
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
+    printf("  sub rsp, %d\n", nvars * 8);
 
     gen(node);
 
+    printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("  ret\n");
     return 0;
