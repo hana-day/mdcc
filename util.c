@@ -43,3 +43,10 @@ void *map_get_def(Map *map, char *key, void *defv) {
   void *v = map_get(map, key);
   return v == NULL ? defv : v;
 }
+
+bool isnondigit(char c) { return isalpha(c) || c == '_'; }
+
+bool istypename() {
+  Token tok = tokens[pos];
+  return tok.ty == TK_INT;
+}

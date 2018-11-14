@@ -1,9 +1,6 @@
 #include "mdcc.h"
 
-char *buf;
-Token tokens[100];
-Map *keywords;
-int pos;
+int pos = 0;
 int nvars;
 Map *vars;
 
@@ -31,19 +28,7 @@ char *format(char *fmt, ...) {
   return strdup(buf);
 }
 
-void usage() { error("Usage: mdcc <source file>"); }
-
-bool isnondigit(char c) { return isalpha(c) || c == '_'; }
-
-bool istypename() {
-  Token tok = tokens[pos];
-  return tok.ty == TK_INT;
-}
-
-void load_keywords() {
-  keywords = new_map();
-  map_set(keywords, "int", (void *)TK_INT);
-}
+static void usage() { error("Usage: mdcc <source file>"); }
 
 static bool consume(int ty) {
   if (tokens[pos].ty != ty)
@@ -230,47 +215,6 @@ static Node *parse() {
   return node;
 }
 
-static void tokenize() {
-  int i = 0;
-  while (*buf) {
-    if (isspace(*buf)) {
-      buf++;
-      continue;
-    }
-    if (isdigit(*buf)) {
-      tokens[i].ty = TK_NUM;
-      tokens[i].val = atoi(buf);
-      i++;
-      buf++;
-      continue;
-    }
-    if (isnondigit(*buf)) {
-      int slen = 0;
-      while (isnondigit(buf[slen]) || isdigit(buf[slen]))
-        slen++;
-      char *name = strndup(buf, slen);
-      tokens[i].ty = (int)map_get_def(keywords, name, (void *)TK_IDENT);
-      tokens[i].name = name;
-      i++;
-      buf += slen;
-      continue;
-    }
-    if (*buf == '\'') {
-      buf++;
-      tokens[i].ty = TK_NUM;
-      tokens[i].val = *buf;
-      i++;
-      buf++;
-      if (*buf++ != '\'')
-        error("Unclosed character literal.");
-    }
-    tokens[i].ty = *buf;
-    buf++;
-    i++;
-  }
-  tokens[i].ty = TK_EOF;
-}
-
 static void emit(char *inst, char *arg0, char *arg1) {
   printf("  %s", inst);
   if (arg0 != NULL) {
@@ -385,12 +329,9 @@ int main(int argc, char **argv) {
   nvars = 0;
   vars = new_map();
 
-  load_keywords();
-
   buf = argv[1];
   tokenize();
 
-  pos = 0;
   Node *node = parse();
   emit_directive("intel_syntax noprefix");
   emit_directive("global _main");
