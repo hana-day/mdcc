@@ -94,12 +94,8 @@ static Node *primary_expr() {
       return node;
     } else {
       Var *var;
-      if ((var = map_get(vars, name)) == NULL) {
-        var = malloc(sizeof(Var));
-        var->name = name;
-        var->offset = ++nvars;
-        map_set(vars, name, (void *)var);
-      }
+      if ((var = map_get(vars, name)) == NULL)
+          err("Undefined identifier %s", tokens[pos].name);
       pos++;
       return new_node_ident(name, var);
     }
@@ -170,8 +166,6 @@ static int decl_specifier() {
   err("Unknown declaration specifier %d", tokens[pos].ty);
 }
 
-static Node *assignment_expr() { return unary_expr(); }
-
 static Node *init_declarator(int ty) {
   if (tokens[pos].ty != TK_IDENT)
     err("Bad token %d", tokens[pos].ty);
@@ -183,7 +177,7 @@ static Node *init_declarator(int ty) {
   pos++;
   if (consume('=')) {
     Node *lhs = new_node_ident(name, var);
-    Node *rhs = assignment_expr();
+    Node *rhs = expr();
     return new_node('=', lhs, rhs);
   } else {
     return new_node_null();
