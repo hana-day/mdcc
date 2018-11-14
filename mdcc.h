@@ -25,15 +25,6 @@ typedef struct {
   Vector *vals;
 } Map;
 
-// util.c
-Map *new_map(void);
-void map_set(Map *map, char *key, void *val);
-void *map_get(Map *map, char *key);
-void *map_get_def(Map *map, char *key, void *defv);
-bool isnondigit(char c);
-bool istypename();
-char *format(char *fmt, ...);
-
 enum {
   TK_NUM = 256,
   TK_INT,
@@ -75,14 +66,29 @@ typedef struct Node {
   Vector *stmts;
 } Node;
 
+// util.c
+Map *new_map(void);
+void map_set(Map *map, char *key, void *val);
+void *map_get(Map *map, char *key);
+void *map_get_def(Map *map, char *key, void *defv);
+bool isnondigit(char c);
+char *format(char *fmt, ...);
+
+// token.c
 extern Token tokens[100];
 extern char *buf;
 extern int pos;
+bool istypename();
 void tokenize();
 
+// parse.c
 Node *parse();
 extern int nvars;
 
+// x64.c
+void gen_x64(Node *node);
+
+// test_util.c
 void test();
 
 #endif

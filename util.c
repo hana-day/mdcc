@@ -46,11 +46,6 @@ void *map_get_def(Map *map, char *key, void *defv) {
 
 bool isnondigit(char c) { return isalpha(c) || c == '_'; }
 
-bool istypename() {
-  Token tok = tokens[pos];
-  return tok.ty == TK_INT;
-}
-
 char *format(char *fmt, ...) {
   char buf[2048];
   va_list ap;

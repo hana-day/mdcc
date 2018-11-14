@@ -9,6 +9,11 @@ static void load_keywords() {
   map_set(keywords, "int", (void *)TK_INT);
 }
 
+bool istypename() {
+  Token tok = tokens[pos];
+  return tok.ty == TK_INT;
+}
+
 void tokenize() {
   load_keywords();
 
