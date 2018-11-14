@@ -179,7 +179,7 @@ static int decl_specifier() {
     pos++;
     return TK_INT;
   }
-  error("Unknown declaration specifier %d", tokens[pos].ty);
+  bad_token(&tokens[pos], format("Unknown declaration specifier"));
 }
 
 static Node *init_declarator(int ty) {
@@ -271,40 +271,54 @@ static void tokenize() {
   tokens[i].ty = TK_EOF;
 }
 
+static void emit(char *inst, char *arg0, char *arg1) {
+  printf("  %s", inst);
+  if (arg0 != NULL) {
+    printf(" %s", arg0);
+    if (arg1 != NULL)
+      printf(", %s", arg1);
+  }
+  printf("\n");
+}
+
+static void emit_label(char *s) { printf("%s:\n", s); }
+
+static void emit_directive(char *s) { printf(".%s\n", s); }
+
 void gen(Node *node);
 
 void gen_binary(Node *node) {
   gen(node->lhs);
   gen(node->rhs);
 
-  printf("  pop rdi\n");
-  printf("  pop rax\n");
+  emit("pop", "rdi", NULL);
+  emit("pop", "rax", NULL);
 
   switch (node->ty) {
   case '+':
-    printf("  add rax, rdi\n");
+    emit("add", "rax", "rdi");
     break;
   case '-':
-    printf("  sub rax, rdi\n");
+    emit("sub", "rax", "rdi");
     break;
   case '*':
-    printf("  imul rax, rdi\n");
+    emit("imul", "rax", "rdi");
     break;
   case '/':
-    printf("  mov rdx, 0\n");
-    printf("  div rdi\n");
+    emit("mov", "rdx", "0");
+    emit("div", "rdi", NULL);
     break;
   default:
-    error("Unknown binary operator");
+    error("Unknown binary operator %d", node->ty);
   }
-  printf("  push rax\n");
+  emit("push", "rax", NULL);
 }
 
 void gen_lval(Node *node) {
   if (node->ty == ND_IDENT) {
-    printf("  mov rax, rbp\n");
-    printf("  sub rax, %d\n", node->var->offset * 8);
-    printf("  push rax\n");
+    emit("mov", "rax", "rbp");
+    emit("sub", "rax", format("%d", node->var->offset * 8));
+    emit("push", "rax", NULL);
     return;
   }
   error("lvalue is not identifier.");
@@ -313,7 +327,7 @@ void gen_lval(Node *node) {
 void gen(Node *node) {
   switch (node->ty) {
   case ND_NUM:
-    printf("  push %d\n", node->val);
+    emit("push", format("%d", node->val), NULL);
     return;
   case ND_COMP_STMT:
     for (int i = 0; i < node->stmts->len; i++) {
@@ -321,30 +335,30 @@ void gen(Node *node) {
       if (stmt->ty == ND_NULL)
         break;
       gen(stmt);
-      printf("  pop rax\n");
+      emit("pop", "rax", NULL);
     }
     break;
   case ND_NULL:
     break;
   case ND_IDENT:
     gen_lval(node);
-    printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
-    printf("  push rax\n");
+    emit("pop", "rax", NULL);
+    emit("mov", "rax", "[rax]");
+    emit("push", "rax", NULL);
     return;
     break;
   case ND_CALL:
-    printf("  call %s\n", node->name);
-    printf("  push rax\n");
+    emit("call", format("%s", node->name), NULL);
+    emit("push", "rax", NULL);
     break;
   case '=':
     gen_lval(node->lhs);
     gen(node->rhs);
 
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
-    printf("  mov [rax], rdi\n");
-    printf("  push rdi\n");
+    emit("pop", "rdi", NULL);
+    emit("pop", "rax", NULL);
+    emit("mov", "[rax]", "rdi");
+    emit("push", "rdi", NULL);
     return;
     break;
   case '+':
@@ -378,28 +392,28 @@ int main(int argc, char **argv) {
 
   pos = 0;
   Node *node = parse();
-  printf(".intel_syntax noprefix\n");
-  printf(".global _main\n");
+  emit_directive("intel_syntax noprefix");
+  emit_directive("global _main");
 
   // Definition of sample function z.
   // z needs no argument and returns 1.
-  printf("z:\n");
-  printf("  push rbp\n");
-  printf("  mov rbp, rsp\n");
-  printf("  mov rax, 1\n");
-  printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
-  printf("  ret\n");
+  emit_label("z");
+  emit("push", "rbp", NULL);
+  emit("mov", "rbp", "rsp");
+  emit("mov", "rax", "1");
+  emit("mov", "rsp", "rbp");
+  emit("pop", "rbp", NULL);
+  emit("ret", NULL, NULL);
 
-  printf("_main:\n");
-  printf("  push rbp\n");
-  printf("  mov rbp, rsp\n");
-  printf("  sub rsp, %d\n", nvars * 8);
+  emit_label("_main");
+  emit("push", "rbp", NULL);
+  emit("mov", "rbp", "rsp");
+  emit("sub", "rsp", format("%d", nvars * 8));
 
   gen(node);
 
-  printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
-  printf("  ret\n");
+  emit("mov", "rsp", "rbp");
+  emit("pop", "rbp", NULL);
+  emit("ret", NULL, NULL);
   return 0;
 }
