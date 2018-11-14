@@ -141,7 +141,7 @@ static int decl_specifier() {
   bad_token(&tokens[pos], format("Unknown declaration specifier"));
 }
 
-static Node *init_declarator(int ty) {
+static Var *declarator() {
   if (tokens[pos].ty != TK_IDENT)
     bad_token(&tokens[pos], "Token is not identifier.");
   char *name = tokens[pos].name;
@@ -150,8 +150,13 @@ static Node *init_declarator(int ty) {
   var->offset = ++nvars;
   map_set(vars, name, (void *)var);
   pos++;
+  return var;
+}
+
+static Node *init_declarator(int ty) {
+  Var *var = declarator();
   if (consume('=')) {
-    Node *lhs = new_node_ident(name, var);
+    Node *lhs = new_node_ident(var->name, var);
     Node *rhs = expr();
     return new_node('=', lhs, rhs);
   } else {
