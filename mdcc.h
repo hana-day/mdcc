@@ -8,17 +8,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-__attribute__((noreturn)) void error(char *fmt, ...);
-
 typedef struct {
   void **data;
   int capacity;
   int len;
 } Vector;
-
-Vector *new_vec(void);
-void vec_push(Vector *v, void *elm);
-void *vec_pop(Vector *v);
 
 typedef struct {
   Vector *keys;
@@ -66,7 +60,13 @@ typedef struct Node {
   Vector *stmts;
 } Node;
 
+// main.c
+__attribute__((noreturn)) void error(char *fmt, ...);
+
 // util.c
+Vector *new_vec(void);
+void vec_push(Vector *v, void *elm);
+void *vec_pop(Vector *v);
 Map *new_map(void);
 void map_set(Map *map, char *key, void *val);
 void *map_get(Map *map, char *key);

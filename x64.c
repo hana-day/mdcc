@@ -126,5 +126,4 @@ void gen_x64(Node *node) {
   emit("mov", "rsp", "rbp");
   emit("pop", "rbp", NULL);
   emit("ret", NULL, NULL);
-
 }
