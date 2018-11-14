@@ -7,7 +7,7 @@ int pos;
 int nvars;
 Map *vars;
 
-__attribute__((noreturn)) void err(char *fmt, ...) {
+__attribute__((noreturn)) void error(char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vfprintf(stderr, fmt, args);
@@ -17,8 +17,8 @@ __attribute__((noreturn)) void err(char *fmt, ...) {
 }
 
 __attribute__((noreturn)) void bad_token(Token *t, char *fmt) {
-  err("Error at token %d", t->ty);
-  err(fmt);
+  error("Error at token %d", t->ty);
+  error(fmt);
   exit(1);
 }
 
@@ -31,7 +31,7 @@ char *format(char *fmt, ...) {
   return strdup(buf);
 }
 
-void usage() { err("Usage: mdcc <source file>"); }
+void usage() { error("Usage: mdcc <source file>"); }
 
 bool isnondigit(char c) { return isalpha(c) || c == '_'; }
 
@@ -179,7 +179,7 @@ static int decl_specifier() {
     pos++;
     return TK_INT;
   }
-  err("Unknown declaration specifier %d", tokens[pos].ty);
+  error("Unknown declaration specifier %d", tokens[pos].ty);
 }
 
 static Node *init_declarator(int ty) {
@@ -262,7 +262,7 @@ static void tokenize() {
       i++;
       buf++;
       if (*buf++ != '\'')
-        err("Unclosed character literal.");
+        error("Unclosed character literal.");
     }
     tokens[i].ty = *buf;
     buf++;
@@ -295,7 +295,7 @@ void gen_binary(Node *node) {
     printf("  div rdi\n");
     break;
   default:
-    err("Unknown binary operator");
+    error("Unknown binary operator");
   }
   printf("  push rax\n");
 }
@@ -307,7 +307,7 @@ void gen_lval(Node *node) {
     printf("  push rax\n");
     return;
   }
-  err("lvalue is not identifier.");
+  error("lvalue is not identifier.");
 }
 
 void gen(Node *node) {
@@ -355,7 +355,7 @@ void gen(Node *node) {
     return;
     break;
   default:
-    err("Unknown node type %d", node->ty);
+    error("Unknown node type %d", node->ty);
   }
 }
 

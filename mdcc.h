@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-__attribute__((noreturn)) void err(char *fmt, ...);
+__attribute__((noreturn)) void error(char *fmt, ...);
 
 typedef struct {
   void **data;
