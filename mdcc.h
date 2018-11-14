@@ -40,8 +40,12 @@ typedef struct {
   int val;    // Number value
 } Token;
 
-typedef struct Var {
+typedef struct Type {
   int ty;
+} Type;
+
+typedef struct Var {
+  Type *ty;
   char *name;
   int offset;
 } Var;

@@ -3,9 +3,9 @@
 int nvars = 0;
 static Map *vars;
 
-__attribute__((noreturn)) static void bad_token(Token *t, char *fmt) {
-  error("Error at token %d", t->ty);
-  error(fmt);
+__attribute__((noreturn)) static void bad_token(Token *t, char *msg) {
+  fprintf(stderr, "Error at token %d\n", t->ty);
+  fprintf(stderr, "%s\n", msg);
   exit(1);
 }
 
@@ -133,19 +133,22 @@ static Node *expr_stmt() {
   return e;
 }
 
-static int decl_specifier() {
+static Type *decl_specifier() {
   if (tokens[pos].ty == TK_INT) {
     pos++;
-    return TK_INT;
+    Type *type = malloc(sizeof(Type));
+    type->ty = TK_INT;
+    return type;
   }
   bad_token(&tokens[pos], format("Unknown declaration specifier"));
 }
 
-static Var *declarator() {
+static Var *declarator(Type *ty) {
   if (tokens[pos].ty != TK_IDENT)
     bad_token(&tokens[pos], "Token is not identifier.");
   char *name = tokens[pos].name;
   Var *var = malloc(sizeof(Var));
+  var->ty = ty;
   var->name = name;
   var->offset = ++nvars;
   map_set(vars, name, (void *)var);
@@ -153,8 +156,8 @@ static Var *declarator() {
   return var;
 }
 
-static Node *init_declarator(int ty) {
-  Var *var = declarator();
+static Node *init_declarator(Type *ty) {
+  Var *var = declarator(ty);
   if (consume('=')) {
     Node *lhs = new_node_ident(var->name, var);
     Node *rhs = expr();
@@ -165,7 +168,7 @@ static Node *init_declarator(int ty) {
 }
 
 static void *decl() {
-  int ty = decl_specifier();
+  Type *ty = decl_specifier();
   if (consume(';'))
     return new_node_null();
   Node *node = init_declarator(ty);
