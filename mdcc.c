@@ -10,10 +10,25 @@ Map *vars;
 __attribute__((noreturn)) void err(char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  vprintf(fmt, args);
-  printf("\n");
+  vfprintf(stderr, fmt, args);
+  fprintf(stderr, "\n");
   va_end(args);
   exit(1);
+}
+
+__attribute__((noreturn)) void bad_token(Token *t, char *fmt) {
+  err("Error at token %d", t->ty);
+  err(fmt);
+  exit(1);
+}
+
+char *format(char *fmt, ...) {
+  char buf[2048];
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+  return strdup(buf);
 }
 
 void usage() { err("Usage: mdcc <source file>"); }
@@ -48,7 +63,7 @@ static void expect(int ty) {
     pos++;
     return;
   }
-  err("Bad token %c", ty);
+  bad_token(&t, format("Expected token %d", ty));
 }
 
 static Node *new_node(int ty, Node *lhs, Node *rhs) {
@@ -95,7 +110,8 @@ static Node *primary_expr() {
     } else {
       Var *var;
       if ((var = map_get(vars, name)) == NULL)
-          err("Undefined identifier %s", tokens[pos].name);
+        bad_token(&tokens[pos],
+                  format("Undefined identifier %s", tokens[pos].name));
       pos++;
       return new_node_ident(name, var);
     }
@@ -107,12 +123,12 @@ static Node *primary_expr() {
     pos++;
     Node *node = expr();
     if (tokens[pos].ty != ')') {
-      err("No closing parenthesis.");
+      bad_token(&tokens[pos], "No closing parenthesis.");
     }
     pos++;
     return node;
   }
-  err("Unexpected token %d.\n", tokens[pos].ty);
+  bad_token(&tokens[pos], "Bad token");
 }
 
 static Node *postfix_expr() { return primary_expr(); }
@@ -168,7 +184,7 @@ static int decl_specifier() {
 
 static Node *init_declarator(int ty) {
   if (tokens[pos].ty != TK_IDENT)
-    err("Bad token %d", tokens[pos].ty);
+    bad_token(&tokens[pos], "Token is not identifier.");
   char *name = tokens[pos].name;
   Var *var = malloc(sizeof(Var));
   var->name = name;
