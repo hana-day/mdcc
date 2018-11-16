@@ -53,6 +53,13 @@ static void gen_lval(Node *node) {
   error("lvalue is not identifier.");
 }
 
+static void gen_ident(Node *node) {
+  gen_lval(node);
+  emit("pop", "rax", NULL);
+  emit("mov", "rax", "[rax]");
+  emit("push", "rax", NULL);
+}
+
 static void gen(Node *node) {
   switch (node->ty) {
   case ND_NUM:
@@ -70,14 +77,20 @@ static void gen(Node *node) {
   case ND_NULL:
     break;
   case ND_IDENT:
-    gen_lval(node);
-    emit("pop", "rax", NULL);
-    emit("mov", "rax", "[rax]");
-    emit("push", "rax", NULL);
+    gen_ident(node);
     return;
     break;
   case ND_CALL:
     emit("call", format("%s", node->name), NULL);
+    emit("push", "rax", NULL);
+    break;
+  case ND_ADDR:
+    gen_lval(node->rhs);
+    break;
+  case ND_DEREF:
+    gen_ident(node->rhs);
+    emit("pop", "rax", NULL);
+    emit("mov", "rax", "[rax]");
     emit("push", "rax", NULL);
     break;
   case '=':

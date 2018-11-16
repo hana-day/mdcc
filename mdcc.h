@@ -31,6 +31,8 @@ enum {
   ND_COMP_STMT,
   ND_IDENT,
   ND_CALL,
+  ND_ADDR,
+  ND_DEREF,
   ND_NULL,
 };
 
@@ -40,8 +42,14 @@ typedef struct {
   int val;    // Number value
 } Token;
 
+enum {
+  TY_INT = 1,
+  TY_PTR,
+};
+
 typedef struct Type {
   int ty;
+  struct Type *ptr_to;
 } Type;
 
 typedef struct Var {

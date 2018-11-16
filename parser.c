@@ -92,7 +92,15 @@ static Node *primary_expr() {
 
 static Node *postfix_expr() { return primary_expr(); }
 
-static Node *unary_expr() { return postfix_expr(); }
+static Node *cast_expr();
+
+static Node *unary_expr() {
+  if (consume('&'))
+    return new_node(ND_ADDR, new_node_null(), cast_expr());
+  if (consume('*'))
+    return new_node(ND_DEREF, new_node_null(), cast_expr());
+  return postfix_expr();
+}
 
 static Node *cast_expr() { return unary_expr(); }
 
@@ -137,13 +145,22 @@ static Type *decl_specifier() {
   if (tokens[pos].ty == TK_INT) {
     pos++;
     Type *type = malloc(sizeof(Type));
-    type->ty = TK_INT;
+    type->ty = TY_INT;
     return type;
   }
   bad_token(&tokens[pos], format("Unknown declaration specifier"));
 }
 
+static Type *ptr(Type *ty) {
+  Type *newty = malloc(sizeof(Type));
+  newty->ty = TY_PTR;
+  newty->ptr_to = ty;
+  return newty;
+}
+
 static Var *declarator(Type *ty) {
+  while (consume('*'))
+    ty = ptr(ty);
   if (tokens[pos].ty != TK_IDENT)
     bad_token(&tokens[pos], "Token is not identifier.");
   char *name = tokens[pos].name;
