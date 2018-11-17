@@ -87,7 +87,7 @@ static Node *primary_expr() {
     pos++;
     return node;
   }
-  bad_token(&tokens[pos], "Bad token");
+  return new_node_null();
 }
 
 static Node *postfix_expr() { return primary_expr(); }
@@ -104,34 +104,66 @@ static Node *unary_expr() {
 
 static Node *cast_expr() { return unary_expr(); }
 
-static Node *mul_expr() {
+static void *decl();
+
+static Node *conditional_expr();
+
+static Node *assignment_expr() {
+  int prev_pos = pos;
+  Node *lhs = unary_expr();
+
+  // If next token is assignment operator, parse assignment-expression as rhs.
+  // Otherwise, rollback the position of the token and parse
+  // conditional-expression.
+  if (consume('=')) {
+    return new_node('=', lhs, assignment_expr());
+  } else {
+    pos = prev_pos;
+    return conditional_expr();
+  }
+}
+
+static Node *multiplicative_expr() {
   Node *lhs = cast_expr();
   int ty = tokens[pos].ty;
   if (ty == '*' || ty == '/' || ty == '%') {
     pos++;
-    return new_node(ty, lhs, mul_expr());
+    return new_node(ty, lhs, multiplicative_expr());
   } else {
     return lhs;
   }
 }
 
-static void *decl();
-
-static Node *expr() {
-  if (istypename())
-    return decl();
-  Node *lhs = mul_expr();
+static Node *additive_expr() {
+  Node *lhs = multiplicative_expr();
   int ty = tokens[pos].ty;
   if (ty == '+' || ty == '-') {
     pos++;
-    return new_node(ty, lhs, expr());
-  } else if (ty == '=') {
-    pos++;
-    return new_node(ty, lhs, expr());
+    return new_node(ty, lhs, additive_expr());
   } else {
     return lhs;
   }
 }
+
+static Node *shift_expr() { return additive_expr(); }
+
+static Node *relational_expr() { return shift_expr(); }
+
+static Node *equality_expr() { return relational_expr(); }
+
+static Node *and_expr() { return equality_expr(); }
+
+static Node *exclusive_or_expr() { return and_expr(); }
+
+static Node *inclusive_or_expr() { return exclusive_or_expr(); }
+
+static Node *logical_and_expr() { return inclusive_or_expr(); }
+
+static Node *logical_or_expr() { return logical_and_expr(); }
+
+static Node *conditional_expr() { return logical_or_expr(); }
+
+static Node *expr() { return assignment_expr(); }
 
 static Node *expr_stmt() {
   if (consume(';'))
@@ -189,6 +221,7 @@ static void *decl() {
   if (consume(';'))
     return new_node_null();
   Node *node = init_declarator(ty);
+  expect(';');
   return node;
 }
 
@@ -199,7 +232,10 @@ static Node *compound_stmt() {
   node->ty = ND_COMP_STMT;
   node->stmts = new_vec();
   while (!consume('}')) {
-    vec_push(node->stmts, stmt());
+    if (istypename(tokens[pos].ty))
+      vec_push(node->stmts, decl());
+    else
+      vec_push(node->stmts, stmt());
   }
   return node;
 }

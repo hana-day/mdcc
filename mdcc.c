@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
     test();
     return 0;
   }
+
   buf = argv[1];
 
   tokenize();
