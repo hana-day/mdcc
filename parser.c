@@ -16,6 +16,15 @@ static bool consume(int ty) {
   return true;
 }
 
+static bool consume_str(char *s) {
+  for (int i = 0; i < strlen(s); i++) {
+    if (tokens[pos+i].ty == TK_EOF || s[i] != tokens[pos+i].ty)
+      return false;
+  }
+  pos += strlen(s);
+  return true;
+}
+
 static void expect(int ty) {
   Token t = tokens[pos];
   if (t.ty == ty) {
@@ -117,6 +126,18 @@ static Node *assignment_expr() {
   // conditional-expression.
   if (consume('=')) {
     return new_node('=', lhs, assignment_expr());
+  } else if (consume_str("*=")){
+    return new_node('=', lhs,
+                    new_node('*', lhs, assignment_expr()));
+  } else if (consume_str("/=")){
+    return new_node('=', lhs,
+                    new_node('/', lhs, assignment_expr()));
+  } else if (consume_str("+=")){
+    return new_node('=', lhs,
+                    new_node('+', lhs, assignment_expr()));
+  } else if (consume_str("-=")){
+    return new_node('=', lhs,
+                    new_node('-', lhs, assignment_expr()));
   } else {
     pos = prev_pos;
     return conditional_expr();

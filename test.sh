@@ -33,4 +33,8 @@ test_ 48 "{ '0'; }"
 test_ 97 "{ int a = 'a'; a;}"
 test_ 2 "{ int a = 1; a = 2; a;}"
 test_ 1 "{ int a = 1; int *b = &a; *b; }"
+test_ 2 "{ int a = 1; a *= 2; a; }"
+test_ 1 "{ int a = 2; a /= 2; a; }"
+test_ 2 "{ int a = 1; a += 1; a; }"
+test_ 1 "{ int a = 2; a -= 1; a; }"
 echo OK
