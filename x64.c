@@ -1,13 +1,12 @@
 #include "mdcc.h"
 
-static void emit(char *inst, char *arg0, char *arg1) {
-  printf("  %s", inst);
-  if (arg0 != NULL) {
-    printf(" %s", arg0);
-    if (arg1 != NULL)
-      printf(", %s", arg1);
-  }
+static void emit(char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  printf("  ");
+  vprintf(fmt, args);
   printf("\n");
+  va_end(args);
 }
 
 static void emit_label(char *s) { printf("%s:\n", s); }
@@ -20,34 +19,34 @@ static void gen_binary(Node *node) {
   gen(node->lhs);
   gen(node->rhs);
 
-  emit("pop", "rdi", NULL);
-  emit("pop", "rax", NULL);
+  emit("pop rdi");
+  emit("pop rax");
 
   switch (node->ty) {
   case '+':
-    emit("add", "rax", "rdi");
+    emit("add rax, rdi");
     break;
   case '-':
-    emit("sub", "rax", "rdi");
+    emit("sub rax, rdi");
     break;
   case '*':
-    emit("imul", "rax", "rdi");
+    emit("imul rax, rdi");
     break;
   case '/':
-    emit("mov", "rdx", "0");
-    emit("div", "rdi", NULL);
+    emit("mov rdx, 0");
+    emit("div rdi");
     break;
   default:
     error("Unknown binary operator %d", node->ty);
   }
-  emit("push", "rax", NULL);
+  emit("push rax");
 }
 
 static void gen_lval(Node *node) {
   if (node->ty == ND_IDENT) {
-    emit("mov", "rax", "rbp");
-    emit("sub", "rax", format("%d", node->var->offset * 8));
-    emit("push", "rax", NULL);
+    emit("mov rax, rbp");
+    emit("sub rax, %d", node->var->offset * 8);
+    emit("push rax");
     return;
   }
   error("lvalue is not identifier.");
@@ -55,15 +54,15 @@ static void gen_lval(Node *node) {
 
 static void gen_ident(Node *node) {
   gen_lval(node);
-  emit("pop", "rax", NULL);
-  emit("mov", "rax", "[rax]");
-  emit("push", "rax", NULL);
+  emit("pop rax");
+  emit("mov rax, [rax]");
+  emit("push rax");
 }
 
 static void gen(Node *node) {
   switch (node->ty) {
   case ND_NUM:
-    emit("push", format("%d", node->val), NULL);
+    emit("push %d", node->val);
     return;
   case ND_COMP_STMT:
     for (int i = 0; i < node->stmts->len; i++) {
@@ -71,7 +70,7 @@ static void gen(Node *node) {
       if (stmt->ty == ND_NULL)
         break;
       gen(stmt);
-      emit("pop", "rax", NULL);
+      emit("pop rax");
     }
     break;
   case ND_NULL:
@@ -81,26 +80,26 @@ static void gen(Node *node) {
     return;
     break;
   case ND_CALL:
-    emit("call", format("%s", node->name), NULL);
-    emit("push", "rax", NULL);
+    emit("call %s", node->name);
+    emit("push rax");
     break;
   case ND_ADDR:
     gen_lval(node->rhs);
     break;
   case ND_DEREF:
     gen_ident(node->rhs);
-    emit("pop", "rax", NULL);
-    emit("mov", "rax", "[rax]");
-    emit("push", "rax", NULL);
+    emit("pop rax");
+    emit("mov rax, [rax]");
+    emit("push rax");
     break;
   case '=':
     gen_lval(node->lhs);
     gen(node->rhs);
 
-    emit("pop", "rdi", NULL);
-    emit("pop", "rax", NULL);
-    emit("mov", "[rax]", "rdi");
-    emit("push", "rdi", NULL);
+    emit("pop rdi");
+    emit("pop rax");
+    emit("mov [rax], rdi");
+    emit("push rdi");
     return;
     break;
   case '+':
@@ -122,21 +121,21 @@ void gen_x64(Node *node) {
   // Definition of sample function z.
   // z needs no argument and returns 1.
   emit_label("z");
-  emit("push", "rbp", NULL);
-  emit("mov", "rbp", "rsp");
-  emit("mov", "rax", "1");
-  emit("mov", "rsp", "rbp");
-  emit("pop", "rbp", NULL);
-  emit("ret", NULL, NULL);
+  emit("push rbp");
+  emit("mov rbp, rsp");
+  emit("mov rax, 1");
+  emit("mov rsp, rbp");
+  emit("pop rbp");
+  emit("ret");
 
   emit_label("_main");
-  emit("push", "rbp", NULL);
-  emit("mov", "rbp", "rsp");
-  emit("sub", "rsp", format("%d", nvars * 8));
+  emit("push rbp");
+  emit("mov rbp, rsp");
+  emit("sub rsp, %d", nvars * 8);
 
   gen(node);
 
-  emit("mov", "rsp", "rbp");
-  emit("pop", "rbp", NULL);
-  emit("ret", NULL, NULL);
+  emit("mov rsp, rbp");
+  emit("pop rbp");
+  emit("ret");
 }
