@@ -34,6 +34,8 @@ enum {
   ND_ADDR,
   ND_DEREF,
   ND_VARREF,
+  ND_ROOT,
+  ND_FUNC,
   ND_NULL,
 };
 
@@ -59,6 +61,12 @@ typedef struct Var {
   int offset;
 } Var;
 
+struct Function;
+
+/**
+ *  Function definition
+ *  int "name" ("params") {"body"}
+ */
 typedef struct Node {
   int ty; // Node type
   struct Node *lhs;
@@ -71,6 +79,14 @@ typedef struct Node {
 
   // Vector of statements
   Vector *stmts;
+
+  // For the root node
+  Vector *funcs;
+
+  // For function definition
+  Vector *params;
+  struct Node *body;
+  Vector *func_vars;
 } Node;
 
 // main.c

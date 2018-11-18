@@ -11,6 +11,17 @@ static void emit(char *fmt, ...) {
 
 static void emit_label(char *s) { printf("%s:\n", s); }
 
+static void emit_prologue(Node *func) {
+  emit("push rbp");
+  emit("mov rbp, rsp");
+  emit("sub rsp, %d", func->func_vars->len * 8);
+}
+
+static void emit_epilogue() {
+  emit("mov rsp, rbp");
+  emit("pop rbp");
+}
+
 static void emit_directive(char *s) { printf(".%s\n", s); }
 
 static void gen(Node *node);
@@ -92,6 +103,20 @@ static void gen(Node *node) {
     emit("mov rax, [rax]");
     emit("push rax");
     break;
+  case ND_ROOT:
+    for (int i = 0; i < node->funcs->len; i++) {
+      Node *func = node->funcs->data[i];
+      if (!strcmp(func->name, "main")) {
+        emit_label(format("_%s", "main"));
+      } else {
+        emit_label(func->name);
+      }
+      emit_prologue(func);
+      gen(func->body);
+      emit_epilogue();
+      emit("ret");
+    }
+    break;
   case '=':
     gen_lval(node->lhs);
     gen(node->rhs);
@@ -128,14 +153,5 @@ void gen_x64(Node *node) {
   emit("pop rbp");
   emit("ret");
 
-  emit_label("_main");
-  emit("push rbp");
-  emit("mov rbp, rsp");
-  emit("sub rsp, %d", nvars * 8);
-
   gen(node);
-
-  emit("mov rsp, rbp");
-  emit("pop rbp");
-  emit("ret");
 }

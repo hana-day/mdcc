@@ -5,8 +5,9 @@ typedef struct Scope {
   Map *vars;
 } Scope;
 
-int nvars = 0;
 Scope *scope;
+int nfunc_vars;
+Vector *func_vars;
 
 static Scope *new_scope(Scope *outer) {
   Scope *scope = malloc(sizeof(Scope));
@@ -28,8 +29,9 @@ static Var *new_var(Type *ty, char *name) {
   Var *var = malloc(sizeof(Var));
   var->ty = ty;
   var->name = name;
-  var->offset = ++nvars;
+  var->offset = ++nfunc_vars;
   map_set(scope->vars, name, (void *)var);
+  vec_push(func_vars, (void *)var);
   return var;
 }
 
@@ -258,6 +260,7 @@ static Vector *param_list() {
 }
 
 static Vector *param_type_list() { return param_list(); }
+static Node *compound_stmt();
 
 static Node *direct_declarator(Type *ty) {
   if (tokens[pos].ty != TK_IDENT)
@@ -267,8 +270,17 @@ static Node *direct_declarator(Type *ty) {
 
   // Function parameters
   if (consume('(')) {
-    expect(')');
-    return new_node_null();
+    Vector *params;
+    if (consume(')')) {
+      params = new_vec();
+    } else {
+      params = param_type_list();
+      expect(')');
+    }
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_FUNC;
+    node->name = name;
+    return node;
     // Variable definition
   } else {
     Node *node = malloc(sizeof(Node));
@@ -307,6 +319,8 @@ static void *decl() {
 static Node *stmt() { return expr_stmt(); }
 
 static Node *compound_stmt() {
+  expect('{');
+  scope = new_scope(scope);
   Node *node = malloc(sizeof(Node));
   node->ty = ND_COMP_STMT;
   node->stmts = new_vec();
@@ -316,16 +330,35 @@ static Node *compound_stmt() {
     else
       vec_push(node->stmts, stmt());
   }
+  scope = scope->outer;
+  return node;
+}
+
+static Node *func_def() {
+  func_vars = new_vec();
+  nfunc_vars = 0;
+  Type *ty = decl_specifier();
+  Node *node = declarator(ty);
+  if (node->ty != ND_FUNC)
+    error("expected function definition but got %d", node->ty);
+  node->body = compound_stmt();
+  node->func_vars = func_vars;
+  return node;
+}
+
+static Node *root() {
+  Node *node = malloc(sizeof(Node));
+  node->ty = ND_ROOT;
+  node->funcs = new_vec();
+  while (tokens[pos].ty != TK_EOF) {
+    vec_push(node->funcs, func_def());
+  }
   return node;
 }
 
 Node *parse() {
   Node *node;
   scope = new_scope(NULL);
-  if (consume('{')) {
-    node = compound_stmt();
-  } else {
-    node = expr();
-  }
+  node = root();
   return node;
 }
