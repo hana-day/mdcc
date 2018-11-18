@@ -33,6 +33,7 @@ enum {
   ND_CALL,
   ND_ADDR,
   ND_DEREF,
+  ND_VARREF,
   ND_NULL,
 };
 

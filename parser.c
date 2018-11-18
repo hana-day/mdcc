@@ -237,21 +237,57 @@ static Type *ptr(Type *ty) {
   return newty;
 }
 
-static Var *declarator(Type *ty) {
-  while (consume('*'))
-    ty = ptr(ty);
+static Node *declarator(Type *ty);
+
+static Var *param_decl() {
+  Type *ty = decl_specifier();
+  Node *node = declarator(ty);
+  return node->var;
+}
+
+static Vector *param_list() {
+  Vector *params = new_vec();
+  Var *param;
+  param = param_decl();
+  vec_push(params, param);
+  while (consume(',')) {
+    param = param_decl();
+    vec_push(params, param);
+  }
+  return params;
+}
+
+static Vector *param_type_list() { return param_list(); }
+
+static Node *direct_declarator(Type *ty) {
   if (tokens[pos].ty != TK_IDENT)
     bad_token(&tokens[pos], "Token is not identifier.");
   char *name = tokens[pos].name;
-  Var *var = new_var(ty, name);
   pos++;
-  return var;
+
+  // Function parameters
+  if (consume('(')) {
+    expect(')');
+    return new_node_null();
+    // Variable definition
+  } else {
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_VARREF;
+    node->var = new_var(ty, name);
+    return node;
+  }
+}
+
+static Node *declarator(Type *ty) {
+  while (consume('*'))
+    ty = ptr(ty);
+  return direct_declarator(ty);
 }
 
 static Node *init_declarator(Type *ty) {
-  Var *var = declarator(ty);
+  Node *node = declarator(ty);
   if (consume('=')) {
-    Node *lhs = new_node_ident(var->name, var);
+    Node *lhs = new_node_ident(node->var->name, node->var);
     Node *rhs = expr();
     return new_node('=', lhs, rhs);
   } else {
