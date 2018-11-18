@@ -330,6 +330,8 @@ static Node *jmp_stmt() {
 static Node *stmt() {
   if (tokens[pos].ty == TK_RETURN) {
     return jmp_stmt();
+  } else if (tokens[pos].ty == '{') {
+    return compound_stmt();
   } else {
     return expr_stmt();
   }

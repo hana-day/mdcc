@@ -37,4 +37,6 @@ test_ 2 "int main() { int a = 1; a *= 2; return a; }"
 test_ 1 "int main() { int a = 2; a /= 2; return a; }"
 test_ 2 "int main() { int a = 1; a += 1; return a; }"
 test_ 1 "int main() { int a = 2; a -= 1; return a; }"
+test_ 2 "int main() { int a = 1; { a = 2; } return a;}"
+test_ 1 "int main() { int a = 1; { int a = 2; } return a;}"
 echo OK
