@@ -36,7 +36,11 @@ static Var *new_var(Type *ty, char *name) {
 }
 
 __attribute__((noreturn)) static void bad_token(Token *t, char *msg) {
-  fprintf(stderr, "Error at token %d\n", t->ty);
+  if (t->ty < 256) {
+    fprintf(stderr, "Error at token %c\n", t->ty);
+  } else {
+    fprintf(stderr, "Error at token %d\n", t->ty);
+  }
   fprintf(stderr, "%s\n", msg);
   exit(1);
 }
