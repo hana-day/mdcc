@@ -23,6 +23,7 @@ enum {
   TK_NUM = 256,
   TK_INT,
   TK_IDENT,
+  TK_RETURN,
   TK_EOF,
 };
 
@@ -36,6 +37,7 @@ enum {
   ND_VARREF,
   ND_ROOT,
   ND_FUNC,
+  ND_RETURN,
   ND_NULL,
 };
 
@@ -87,6 +89,9 @@ typedef struct Node {
   Vector *params;
   struct Node *body;
   Vector *func_vars;
+
+  // For "return"
+  struct Node *expr;
 } Node;
 
 // main.c

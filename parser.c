@@ -316,7 +316,24 @@ static void *decl() {
   return node;
 }
 
-static Node *stmt() { return expr_stmt(); }
+static Node *jmp_stmt() {
+  Node *node;
+  if (consume(TK_RETURN)) {
+    node = malloc(sizeof(Node));
+    node->ty = ND_RETURN;
+    node->expr = expr();
+    return node;
+  }
+  bad_token(&tokens[pos], "Unknown jump statement");
+}
+
+static Node *stmt() {
+  if (tokens[pos].ty == TK_RETURN) {
+    return jmp_stmt();
+  } else {
+    return expr_stmt();
+  }
+}
 
 static Node *compound_stmt() {
   expect('{');

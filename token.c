@@ -7,6 +7,7 @@ Token tokens[100];
 static void load_keywords() {
   keywords = new_map();
   map_set(keywords, "int", (void *)TK_INT);
+  map_set(keywords, "return", (void *)TK_RETURN);
 }
 
 bool istypename() {

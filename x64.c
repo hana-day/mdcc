@@ -20,6 +20,7 @@ static void emit_prologue(Node *func) {
 static void emit_epilogue() {
   emit("mov rsp, rbp");
   emit("pop rbp");
+  emit("ret");
 }
 
 static void emit_directive(char *s) { printf(".%s\n", s); }
@@ -81,7 +82,6 @@ static void gen(Node *node) {
       if (stmt->ty == ND_NULL)
         break;
       gen(stmt);
-      emit("pop rax");
     }
     break;
   case ND_NULL:
@@ -114,8 +114,12 @@ static void gen(Node *node) {
       emit_prologue(func);
       gen(func->body);
       emit_epilogue();
-      emit("ret");
     }
+    break;
+  case ND_RETURN:
+    gen(node->expr);
+    emit("pop rax");
+    emit_epilogue();
     break;
   case '=':
     gen_lval(node->lhs);
