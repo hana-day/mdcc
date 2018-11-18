@@ -1,7 +1,37 @@
 #include "mdcc.h"
 
+typedef struct Scope {
+  struct Scope *outer;
+  Map *vars;
+} Scope;
+
 int nvars = 0;
-static Map *vars;
+Scope *scope;
+
+static Scope *new_scope(Scope *outer) {
+  Scope *scope = malloc(sizeof(Scope));
+  scope->vars = new_map();
+  scope->outer = outer;
+  return scope;
+}
+
+static Var *lookup_var(char *name) {
+  for (Scope *s = scope; s != NULL; s = s->outer) {
+    Var *var = map_get(s->vars, name);
+    if (var)
+      return var;
+  }
+  return NULL;
+}
+
+static Var *new_var(Type *ty, char *name) {
+  Var *var = malloc(sizeof(Var));
+  var->ty = ty;
+  var->name = name;
+  var->offset = ++nvars;
+  map_set(scope->vars, name, (void *)var);
+  return var;
+}
 
 __attribute__((noreturn)) static void bad_token(Token *t, char *msg) {
   fprintf(stderr, "Error at token %d\n", t->ty);
@@ -18,7 +48,7 @@ static bool consume(int ty) {
 
 static bool consume_str(char *s) {
   for (int i = 0; i < strlen(s); i++) {
-    if (tokens[pos+i].ty == TK_EOF || s[i] != tokens[pos+i].ty)
+    if (tokens[pos + i].ty == TK_EOF || s[i] != tokens[pos + i].ty)
       return false;
   }
   pos += strlen(s);
@@ -77,7 +107,7 @@ static Node *primary_expr() {
       return node;
     } else {
       Var *var;
-      if ((var = map_get(vars, name)) == NULL)
+      if ((var = lookup_var(name)) == NULL)
         bad_token(&tokens[pos],
                   format("Undefined identifier %s", tokens[pos].name));
       pos++;
@@ -126,18 +156,14 @@ static Node *assignment_expr() {
   // conditional-expression.
   if (consume('=')) {
     return new_node('=', lhs, assignment_expr());
-  } else if (consume_str("*=")){
-    return new_node('=', lhs,
-                    new_node('*', lhs, assignment_expr()));
-  } else if (consume_str("/=")){
-    return new_node('=', lhs,
-                    new_node('/', lhs, assignment_expr()));
-  } else if (consume_str("+=")){
-    return new_node('=', lhs,
-                    new_node('+', lhs, assignment_expr()));
-  } else if (consume_str("-=")){
-    return new_node('=', lhs,
-                    new_node('-', lhs, assignment_expr()));
+  } else if (consume_str("*=")) {
+    return new_node('=', lhs, new_node('*', lhs, assignment_expr()));
+  } else if (consume_str("/=")) {
+    return new_node('=', lhs, new_node('/', lhs, assignment_expr()));
+  } else if (consume_str("+=")) {
+    return new_node('=', lhs, new_node('+', lhs, assignment_expr()));
+  } else if (consume_str("-=")) {
+    return new_node('=', lhs, new_node('-', lhs, assignment_expr()));
   } else {
     pos = prev_pos;
     return conditional_expr();
@@ -217,11 +243,7 @@ static Var *declarator(Type *ty) {
   if (tokens[pos].ty != TK_IDENT)
     bad_token(&tokens[pos], "Token is not identifier.");
   char *name = tokens[pos].name;
-  Var *var = malloc(sizeof(Var));
-  var->ty = ty;
-  var->name = name;
-  var->offset = ++nvars;
-  map_set(vars, name, (void *)var);
+  Var *var = new_var(ty, name);
   pos++;
   return var;
 }
@@ -262,9 +284,8 @@ static Node *compound_stmt() {
 }
 
 Node *parse() {
-  vars = new_map();
-
   Node *node;
+  scope = new_scope(NULL);
   if (consume('{')) {
     node = compound_stmt();
   } else {
