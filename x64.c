@@ -147,15 +147,5 @@ void gen_x64(Node *node) {
   emit_directive("intel_syntax noprefix");
   emit_directive("global _main");
 
-  // Definition of sample function z.
-  // z needs no argument and returns 1.
-  emit_label("z");
-  emit("push rbp");
-  emit("mov rbp, rsp");
-  emit("mov rax, 1");
-  emit("mov rsp, rbp");
-  emit("pop rbp");
-  emit("ret");
-
   gen(node);
 }
