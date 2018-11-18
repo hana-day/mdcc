@@ -39,4 +39,5 @@ test_ 2 "int main() { int a = 1; a += 1; return a; }"
 test_ 1 "int main() { int a = 2; a -= 1; return a; }"
 test_ 2 "int main() { int a = 1; { a = 2; } return a;}"
 test_ 1 "int main() { int a = 1; { int a = 2; } return a;}"
+test_ 1 "int z(int a) { return a; } int main() { return z(1); }"
 echo OK

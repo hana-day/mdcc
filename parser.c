@@ -97,22 +97,24 @@ static Node *new_node_ident(char *name, Var *var) {
 
 static Node *expr();
 
+static Node *assignment_expr();
+
 static Node *primary_expr() {
   if (tokens[pos].ty == TK_IDENT) {
-    char *name = strdup(tokens[pos].name);
-    if (tokens[pos + 1].ty == '(') {
+    Token tok = tokens[pos++];
+    char *name = strdup(tok.name);
+    if (consume('(')) {
       Node *node = malloc(sizeof(Node));
       node->ty = ND_CALL;
       node->name = name;
-      pos += 2;
-      expect(')');
+      node->args = new_vec();
+      while (!consume(')'))
+        vec_push(node->args, (void *)assignment_expr());
       return node;
     } else {
       Var *var;
       if ((var = lookup_var(name)) == NULL)
-        bad_token(&tokens[pos],
-                  format("Undefined identifier %s", tokens[pos].name));
-      pos++;
+        bad_token(&tok, format("Undefined identifier %s", tok.name));
       return new_node_ident(name, var);
     }
   }
@@ -241,17 +243,17 @@ static Type *ptr(Type *ty) {
 
 static Node *declarator(Type *ty);
 
-static Var *param_decl() {
+static Node *param_decl() {
   Type *ty = decl_specifier();
   Node *node = declarator(ty);
-  return node->var;
+  return node;
 }
 
 static Vector *param_list() {
   Vector *params = new_vec();
-  Var *param;
+  Node *param;
   param = param_decl();
-  vec_push(params, param);
+  vec_push(params, (void *)param);
   while (consume(',')) {
     param = param_decl();
     vec_push(params, param);
@@ -280,11 +282,12 @@ static Node *direct_declarator(Type *ty) {
     Node *node = malloc(sizeof(Node));
     node->ty = ND_FUNC;
     node->name = name;
+    node->params = params;
     return node;
     // Variable definition
   } else {
     Node *node = malloc(sizeof(Node));
-    node->ty = ND_VARREF;
+    node->ty = ND_IDENT;
     node->var = new_var(ty, name);
     return node;
   }

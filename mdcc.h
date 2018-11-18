@@ -34,7 +34,6 @@ enum {
   ND_CALL,
   ND_ADDR,
   ND_DEREF,
-  ND_VARREF,
   ND_ROOT,
   ND_FUNC,
   ND_RETURN,
@@ -89,6 +88,9 @@ typedef struct Node {
   Vector *params;
   struct Node *body;
   Vector *func_vars;
+
+  // For function call
+  Vector *args;
 
   // For "return"
   struct Node *expr;

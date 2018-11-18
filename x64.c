@@ -11,18 +11,6 @@ static void emit(char *fmt, ...) {
 
 static void emit_label(char *s) { printf("%s:\n", s); }
 
-static void emit_prologue(Node *func) {
-  emit("push rbp");
-  emit("mov rbp, rsp");
-  emit("sub rsp, %d", func->func_vars->len * 8);
-}
-
-static void emit_epilogue() {
-  emit("mov rsp, rbp");
-  emit("pop rbp");
-  emit("ret");
-}
-
 static void emit_directive(char *s) { printf(".%s\n", s); }
 
 static void gen(Node *node);
@@ -64,11 +52,67 @@ static void gen_lval(Node *node) {
   error("lvalue is not identifier.");
 }
 
+static void assign(Node *lhs, Node *rhs) {
+  gen_lval(lhs);
+  gen(rhs);
+
+  emit("pop rdi");
+  emit("pop rax");
+  emit("mov [rax], rdi");
+  emit("push rdi");
+}
+
+static void load_args(Node *func) {
+  for (int i = 0; i < func->params->len; i++) {
+    Node *param = func->params->data[i];
+    gen_lval(param);
+    switch (i) {
+    case 0:
+      emit("push rdi");
+      break;
+    default:
+      error("Too many parameters");
+    }
+    emit("pop rdi");
+    emit("pop rax");
+    emit("mov [rax], rdi");
+    emit("push rdi");
+  }
+}
+
 static void gen_ident(Node *node) {
   gen_lval(node);
   emit("pop rax");
   emit("mov rax, [rax]");
   emit("push rax");
+}
+
+static void store_args(Node *node) {
+  for (int i = 0; i < node->args->len; i++) {
+    Node *arg = node->args->data[i];
+    gen(arg);
+    emit("pop rax");
+    switch (i) {
+    case 0:
+      emit("mov rdi, rax");
+      break;
+    default:
+      error("Too many arguments");
+    }
+  }
+}
+
+static void emit_prologue(Node *func) {
+  emit("push rbp");
+  emit("mov rbp, rsp");
+  emit("sub rsp, %d", func->func_vars->len * 8);
+  load_args(func);
+}
+
+static void emit_epilogue() {
+  emit("mov rsp, rbp");
+  emit("pop rbp");
+  emit("ret");
 }
 
 static void gen(Node *node) {
@@ -91,6 +135,7 @@ static void gen(Node *node) {
     return;
     break;
   case ND_CALL:
+    store_args(node);
     emit("call %s", node->name);
     emit("push rax");
     break;
@@ -122,14 +167,7 @@ static void gen(Node *node) {
     emit_epilogue();
     break;
   case '=':
-    gen_lval(node->lhs);
-    gen(node->rhs);
-
-    emit("pop rdi");
-    emit("pop rax");
-    emit("mov [rax], rdi");
-    emit("push rdi");
-    return;
+    assign(node->lhs, node->rhs);
     break;
   case '+':
   case '-':
