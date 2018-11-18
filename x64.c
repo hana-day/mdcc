@@ -70,6 +70,21 @@ static void load_args(Node *func) {
     case 0:
       emit("push rdi");
       break;
+    case 1:
+      emit("push rsi");
+      break;
+    case 2:
+      emit("push rdx");
+      break;
+    case 3:
+      emit("push rcx");
+      break;
+    case 4:
+      emit("push r8");
+      break;
+    case 5:
+      emit("push r9");
+      break;
     default:
       error("Too many parameters");
     }
@@ -95,6 +110,21 @@ static void store_args(Node *node) {
     switch (i) {
     case 0:
       emit("mov rdi, rax");
+      break;
+    case 1:
+      emit("mov rsi, rax");
+      break;
+    case 2:
+      emit("mov rdx, rax");
+      break;
+    case 3:
+      emit("mov rcx, rax");
+      break;
+    case 4:
+      emit("mov r8, rax");
+      break;
+    case 5:
+      emit("mov r9, rax");
       break;
     default:
       error("Too many arguments");

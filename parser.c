@@ -108,8 +108,12 @@ static Node *primary_expr() {
       node->ty = ND_CALL;
       node->name = name;
       node->args = new_vec();
-      while (!consume(')'))
+      while (!consume(')')) {
         vec_push(node->args, (void *)assignment_expr());
+        if (consume(')'))
+          break;
+        expect(',');
+      }
       return node;
     } else {
       Var *var;
