@@ -245,11 +245,11 @@ static Type *ptr(Type *ty) {
   return newty;
 }
 
-static Node *declarator(Type *ty);
+static Node *declr(Type *ty);
 
 static Node *param_decl() {
   Type *ty = decl_specifier();
-  Node *node = declarator(ty);
+  Node *node = declr(ty);
   return node;
 }
 
@@ -266,9 +266,9 @@ static Vector *param_list() {
 }
 
 static Vector *param_type_list() { return param_list(); }
-static Node *compound_stmt();
+static Node *comp_stmt();
 
-static Node *direct_declarator(Type *ty) {
+static Node *direct_declr(Type *ty) {
   if (tokens[pos].ty != TK_IDENT)
     bad_token(&tokens[pos], "Token is not identifier.");
   char *name = tokens[pos].name;
@@ -283,28 +283,26 @@ static Node *direct_declarator(Type *ty) {
       params = param_type_list();
       expect(')');
     }
-    Node *node = malloc(sizeof(Node));
-    node->ty = ND_FUNC;
+    Node *node = new_node(ND_FUNC, NULL, NULL);
     node->name = name;
     node->params = params;
     return node;
     // Variable definition
   } else {
-    Node *node = malloc(sizeof(Node));
-    node->ty = ND_IDENT;
+    Node *node = new_node(ND_IDENT, NULL, NULL);
     node->var = new_var(ty, name);
     return node;
   }
 }
 
-static Node *declarator(Type *ty) {
+static Node *declr(Type *ty) {
   while (consume('*'))
     ty = ptr(ty);
-  return direct_declarator(ty);
+  return direct_declr(ty);
 }
 
-static Node *init_declarator(Type *ty) {
-  Node *node = declarator(ty);
+static Node *init_declr(Type *ty) {
+  Node *node = declr(ty);
   if (consume('=')) {
     Node *lhs = new_node_ident(node->var->name, node->var);
     Node *rhs = expr();
@@ -318,7 +316,7 @@ static void *decl() {
   Type *ty = decl_specifier();
   if (consume(';'))
     return new_node_null();
-  Node *node = init_declarator(ty);
+  Node *node = init_declr(ty);
   expect(';');
   return node;
 }
@@ -326,8 +324,7 @@ static void *decl() {
 static Node *jmp_stmt() {
   Node *node;
   if (consume(TK_RETURN)) {
-    node = malloc(sizeof(Node));
-    node->ty = ND_RETURN;
+    node = new_node(ND_RETURN, NULL, NULL);
     node->expr = expr();
     return node;
   }
@@ -338,17 +335,16 @@ static Node *stmt() {
   if (tokens[pos].ty == TK_RETURN) {
     return jmp_stmt();
   } else if (tokens[pos].ty == '{') {
-    return compound_stmt();
+    return comp_stmt();
   } else {
     return expr_stmt();
   }
 }
 
-static Node *compound_stmt() {
+static Node *comp_stmt() {
   expect('{');
   scope = new_scope(scope);
-  Node *node = malloc(sizeof(Node));
-  node->ty = ND_COMP_STMT;
+  Node *node = new_node(ND_COMP_STMT, NULL, NULL);
   node->stmts = new_vec();
   while (!consume('}')) {
     if (istypename(tokens[pos].ty))
@@ -364,17 +360,16 @@ static Node *func_def() {
   func_vars = new_vec();
   nfunc_vars = 0;
   Type *ty = decl_specifier();
-  Node *node = declarator(ty);
+  Node *node = declr(ty);
   if (node->ty != ND_FUNC)
     error("expected function definition but got %d", node->ty);
-  node->body = compound_stmt();
+  node->body = comp_stmt();
   node->func_vars = func_vars;
   return node;
 }
 
 static Node *root() {
-  Node *node = malloc(sizeof(Node));
-  node->ty = ND_ROOT;
+  Node *node = new_node(ND_ROOT, NULL, NULL);
   node->funcs = new_vec();
   while (tokens[pos].ty != TK_EOF) {
     vec_push(node->funcs, func_def());
