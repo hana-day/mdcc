@@ -49,6 +49,8 @@ typedef struct {
   int ty;     // Token type
   char *name; // Operator
   int val;    // Number value
+
+  Position *pos;
 } Token;
 
 enum {
@@ -116,11 +118,9 @@ bool isnondigit(char c);
 char *format(char *fmt, ...);
 
 // token.c
-extern Token tokens[100];
 extern char *buf;
 extern int pos;
-bool istypename();
-void tokenize();
+Vector *tokenize();
 
 // parse.c
 Node *parse();

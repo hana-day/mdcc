@@ -5,9 +5,14 @@ typedef struct Scope {
   Map *vars;
 } Scope;
 
+Vector *tokens;
 Scope *scope;
 int nfunc_vars;
 Vector *func_vars;
+
+inline static Token *peek(int p) { return tokens->data[p]; }
+
+static bool istypename() { return peek(pos)->ty == TK_INT; }
 
 static Scope *new_scope(Scope *outer) {
   Scope *scope = malloc(sizeof(Scope));
@@ -46,7 +51,7 @@ __attribute__((noreturn)) static void bad_token(Token *t, char *msg) {
 }
 
 static bool consume(int ty) {
-  if (tokens[pos].ty != ty)
+  if (peek(pos)->ty != ty)
     return false;
   pos++;
   return true;
@@ -54,7 +59,7 @@ static bool consume(int ty) {
 
 static bool consume_str(char *s) {
   for (int i = 0; i < strlen(s); i++) {
-    if (tokens[pos + i].ty == TK_EOF || s[i] != tokens[pos + i].ty)
+    if (peek(pos + i)->ty == TK_EOF || s[i] != peek(pos + i)->ty)
       return false;
   }
   pos += strlen(s);
@@ -62,12 +67,12 @@ static bool consume_str(char *s) {
 }
 
 static void expect(int ty) {
-  Token t = tokens[pos];
-  if (t.ty == ty) {
+  Token *t = peek(pos);
+  if (t->ty == ty) {
     pos++;
     return;
   }
-  bad_token(&t, format("Expected token %d", ty));
+  bad_token(t, format("Expected token %d", ty));
 }
 
 static Node *new_node(int ty, Node *lhs, Node *rhs) {
@@ -104,9 +109,9 @@ static Node *expr();
 static Node *assignment_expr();
 
 static Node *primary_expr() {
-  if (tokens[pos].ty == TK_IDENT) {
-    Token tok = tokens[pos++];
-    char *name = strdup(tok.name);
+  if (peek(pos)->ty == TK_IDENT) {
+    Token *tok = peek(pos++);
+    char *name = strdup(tok->name);
     if (consume('(')) {
       Node *node = malloc(sizeof(Node));
       node->ty = ND_CALL;
@@ -122,18 +127,18 @@ static Node *primary_expr() {
     } else {
       Var *var;
       if ((var = lookup_var(name)) == NULL)
-        bad_token(&tok, format("Undefined identifier %s", tok.name));
+        bad_token(tok, format("Undefined identifier %s", tok->name));
       return new_node_ident(name, var);
     }
   }
-  if (tokens[pos].ty == TK_NUM) {
-    return new_node_num(tokens[pos++].val);
+  if (peek(pos)->ty == TK_NUM) {
+    return new_node_num(peek(pos++)->val);
   }
-  if (tokens[pos].ty == '(') {
+  if (peek(pos)->ty == '(') {
     pos++;
     Node *node = expr();
-    if (tokens[pos].ty != ')') {
-      bad_token(&tokens[pos], "No closing parenthesis.");
+    if (peek(pos)->ty != ')') {
+      bad_token(peek(pos), "No closing parenthesis.");
     }
     pos++;
     return node;
@@ -184,7 +189,7 @@ static Node *assignment_expr() {
 
 static Node *multiplicative_expr() {
   Node *lhs = cast_expr();
-  int ty = tokens[pos].ty;
+  int ty = peek(pos)->ty;
   if (ty == '*' || ty == '/' || ty == '%') {
     pos++;
     return new_node(ty, lhs, multiplicative_expr());
@@ -195,7 +200,7 @@ static Node *multiplicative_expr() {
 
 static Node *additive_expr() {
   Node *lhs = multiplicative_expr();
-  int ty = tokens[pos].ty;
+  int ty = peek(pos)->ty;
   if (ty == '+' || ty == '-') {
     pos++;
     return new_node(ty, lhs, additive_expr());
@@ -233,13 +238,13 @@ static Node *expr_stmt() {
 }
 
 static Type *decl_specifier() {
-  if (tokens[pos].ty == TK_INT) {
+  if (peek(pos)->ty == TK_INT) {
     pos++;
     Type *type = malloc(sizeof(Type));
     type->ty = TY_INT;
     return type;
   }
-  bad_token(&tokens[pos], format("Unknown declaration specifier"));
+  bad_token(peek(pos), format("Unknown declaration specifier"));
 }
 
 static Type *ptr(Type *ty) {
@@ -273,9 +278,9 @@ static Vector *param_type_list() { return param_list(); }
 static Node *comp_stmt();
 
 static Node *direct_declr(Type *ty) {
-  if (tokens[pos].ty != TK_IDENT)
-    bad_token(&tokens[pos], "Token is not identifier.");
-  char *name = tokens[pos].name;
+  if (peek(pos)->ty != TK_IDENT)
+    bad_token(peek(pos), "Token is not identifier.");
+  char *name = peek(pos)->name;
   pos++;
 
   // Function parameters
@@ -332,13 +337,13 @@ static Node *jmp_stmt() {
     node->expr = expr();
     return node;
   }
-  bad_token(&tokens[pos], "Unknown jump statement");
+  bad_token(peek(pos), "Unknown jump statement");
 }
 
 static Node *stmt() {
-  if (tokens[pos].ty == TK_RETURN) {
+  if (peek(pos)->ty == TK_RETURN) {
     return jmp_stmt();
-  } else if (tokens[pos].ty == '{') {
+  } else if (peek(pos)->ty == '{') {
     return comp_stmt();
   } else {
     return expr_stmt();
@@ -351,7 +356,7 @@ static Node *comp_stmt() {
   Node *node = new_node(ND_COMP_STMT, NULL, NULL);
   node->stmts = new_vec();
   while (!consume('}')) {
-    if (istypename(tokens[pos].ty))
+    if (istypename())
       vec_push(node->stmts, decl());
     else
       vec_push(node->stmts, stmt());
@@ -375,13 +380,15 @@ static Node *func_def() {
 static Node *root() {
   Node *node = new_node(ND_ROOT, NULL, NULL);
   node->funcs = new_vec();
-  while (tokens[pos].ty != TK_EOF) {
+  while (peek(pos)->ty != TK_EOF) {
     vec_push(node->funcs, func_def());
   }
   return node;
 }
 
-Node *parse() {
+Node *parse(Vector *_tokens) {
+  tokens = _tokens;
+
   Node *node;
   scope = new_scope(NULL);
   node = root();

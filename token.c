@@ -2,7 +2,6 @@
 
 static Map *keywords;
 char *buf;
-Token tokens[100];
 
 typedef struct {
   char *src;  // source
@@ -17,6 +16,20 @@ static void token_error(Scanner *s, char *msg) {
           s->offset, s->src[s->pos]);
   fprintf(stderr, "%s\n", msg);
   exit(1);
+}
+
+static Position *new_position(Scanner *s) {
+  Position *pos = malloc(sizeof(Position));
+  pos->offset = s->offset;
+  pos->line = s->line;
+  return pos;
+}
+
+static Token *new_token(Scanner *s, int ty) {
+  Token *tok = malloc(sizeof(Token));
+  tok->ty = ty;
+  tok->pos = new_position(s);
+  return tok;
 }
 
 Scanner *new_scanner(char *src) {
@@ -55,11 +68,6 @@ static void load_keywords() {
   map_set(keywords, "return", (void *)TK_RETURN);
 }
 
-bool istypename() {
-  Token tok = tokens[pos];
-  return tok.ty == TK_INT;
-}
-
 static char *scan_ident(Scanner *s) {
   int p = s->pos;
   while (isnondigit(s->ch) || isdigit(s->ch))
@@ -85,37 +93,39 @@ static int scan_number(Scanner *s) {
   return n;
 }
 
-void tokenize() {
+Vector *tokenize() {
   load_keywords();
+
+  Vector *tokens = new_vec();
   Scanner *s = new_scanner(buf);
-  int i = 0;
 
   while (1) {
     char ch = s->ch;
 
     if (ch < 0) {
-      tokens[i].ty = TK_EOF;
+      vec_push(tokens, new_token(s, TK_EOF));
       break;
     } else if (isspace(ch)) {
       skipSpaces(s);
     } else if (isnondigit(ch)) {
       char *name = scan_ident(s);
-      tokens[i].ty = (int)map_get_def(keywords, name, (void *)TK_IDENT);
-      tokens[i].name = name;
-      i++;
+      Token *tok =
+          new_token(s, (int)map_get_def(keywords, name, (void *)TK_IDENT));
+      tok->name = name;
+      vec_push(tokens, tok);
     } else if (isdigit(ch)) {
-      tokens[i].ty = TK_NUM;
-      tokens[i].val = scan_number(s);
-      i++;
+      Token *tok = new_token(s, TK_NUM);
+      tok->val = scan_number(s);
+      vec_push(tokens, tok);
     } else if (ch == '\'') {
       next(s);
-      tokens[i].ty = TK_NUM;
-      tokens[i].val = scan_char(s);
-      i++;
+      Token *tok = new_token(s, TK_NUM);
+      tok->val = scan_char(s);
+      vec_push(tokens, tok);
     } else {
-      tokens[i].ty = ch;
-      i++;
+      vec_push(tokens, new_token(s, ch));
       next(s);
     }
   }
+  return tokens;
 }
