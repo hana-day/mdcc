@@ -41,4 +41,5 @@ test_ 2 "int main() { int a = 1; { a = 2; } return a;}"
 test_ 1 "int main() { int a = 1; { int a = 2; } return a;}"
 test_ 1 "int z(int a) { return a; } int main() { return z(1); }"
 test_ 44 "int sum(int a, int b, int c, int d, int e, int f) { return a*b + c*d + e*f; } int main() { return sum(1, 2, 3, 4, 5, 6); }"
+test_ 123 "int main() { return 123;}"
 echo OK

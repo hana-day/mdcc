@@ -76,6 +76,15 @@ static char scan_char(Scanner *s) {
   return chr;
 }
 
+static int scan_number(Scanner *s) {
+  int n = 0;
+  while (isdigit(s->ch)) {
+    n = n * 10 + (s->ch - 48);
+    next(s);
+  }
+  return n;
+}
+
 void tokenize() {
   load_keywords();
   Scanner *s = new_scanner(buf);
@@ -96,8 +105,7 @@ void tokenize() {
       i++;
     } else if (isdigit(ch)) {
       tokens[i].ty = TK_NUM;
-      tokens[i].val = ch - 48;
-      next(s);
+      tokens[i].val = scan_number(s);
       i++;
     } else if (ch == '\'') {
       next(s);
