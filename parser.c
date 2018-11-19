@@ -42,10 +42,11 @@ static Var *new_var(Type *ty, char *name) {
 
 __attribute__((noreturn)) static void bad_token(Token *t, char *msg) {
   if (t->ty < 256) {
-    fprintf(stderr, "Error at token %c\n", t->ty);
+    fprintf(stderr, "Error at token %c", t->ty);
   } else {
-    fprintf(stderr, "Error at token %d\n", t->ty);
+    fprintf(stderr, "Error at token %d", t->ty);
   }
+  fprintf(stderr, ", line: %d, offset: %d\n", t->pos->line, t->pos->offset);
   fprintf(stderr, "%s\n", msg);
   exit(1);
 }
@@ -371,7 +372,8 @@ static Node *func_def() {
   Type *ty = decl_specifier();
   Node *node = declr(ty);
   if (node->ty != ND_FUNC)
-    error("expected function definition but got %d", node->ty);
+    bad_token(peek(pos),
+              format("expected function definition but got %d", node->ty));
   node->body = comp_stmt();
   node->func_vars = func_vars;
   return node;
