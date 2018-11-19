@@ -40,6 +40,11 @@ enum {
   ND_NULL,
 };
 
+typedef struct Position {
+  int offset; // oofset, starting at 0
+  int line;   // line number, starting at 1
+} Position;
+
 typedef struct {
   int ty;     // Token type
   char *name; // Operator
