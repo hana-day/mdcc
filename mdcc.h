@@ -25,6 +25,7 @@ enum {
   TK_IDENT,
   TK_RETURN,
   TK_IF,
+  TK_ELSE,
   TK_EOF,
 };
 
@@ -81,7 +82,7 @@ struct Function;
  *  "name"("args")
  *
  *  If statement
- *  if ("cond") { "then" }
+ *  if ("cond") "then" else "els"
  *
  *  Return statement
  *  return "expr"
@@ -102,6 +103,7 @@ typedef struct Node {
   struct Node *expr;
   struct Node *cond;
   struct Node *then;
+  struct Node *els;
 
   // Vector of statements
   Vector *stmts;

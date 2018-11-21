@@ -350,6 +350,8 @@ static Node *selection_stmt() {
   node->cond = expr();
   expect(')');
   node->then = stmt();
+  if (consume(TK_ELSE))
+    node->els = stmt();
   return node;
 }
 

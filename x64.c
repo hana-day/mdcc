@@ -150,6 +150,9 @@ static void emit_epilogue() {
 }
 
 static void gen(Node *node) {
+  if (node == NULL)
+    return;
+
   switch (node->ty) {
   case ND_NUM:
     emit("push %d", node->val);
@@ -211,6 +214,7 @@ static void gen(Node *node) {
     emit_label(then_label);
     gen(node->then);
     emit_label(else_label);
+    gen(node->els);
     emit_label(last_label);
     break;
   }
