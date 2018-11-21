@@ -218,6 +218,24 @@ static void gen(Node *node) {
     emit_label(last_label);
     break;
   }
+  case ND_EQ: {
+    char *eq_label = bb_label();
+    char *neq_label = bb_label();
+    char *last_label = bb_label();
+    gen(node->lhs);
+    gen(node->rhs);
+    emit("pop rdi");
+    emit("pop rax");
+    emit("cmp rdi, rax");
+    emit("je %s", eq_label);
+    emit_label(neq_label);
+    emit("push 0");
+    emit("jmp %s", last_label);
+    emit_label(eq_label);
+    emit("push 1");
+    emit_label(last_label);
+    break;
+  }
   case '=':
     assign(node->lhs, node->rhs);
     break;

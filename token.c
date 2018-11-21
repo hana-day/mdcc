@@ -124,6 +124,14 @@ Vector *tokenize() {
       Token *tok = new_token(s, TK_NUM);
       tok->val = scan_char(s);
       vec_push(tokens, tok);
+    } else if (ch == '=') {
+      next(s);
+      if (s->ch == '=') {
+        next(s);
+        vec_push(tokens, new_token(s, TK_EQ));
+      } else {
+        vec_push(tokens, new_token(s, ch));
+      }
     } else {
       vec_push(tokens, new_token(s, ch));
       next(s);

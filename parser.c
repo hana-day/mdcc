@@ -214,7 +214,13 @@ static Node *shift_expr() { return additive_expr(); }
 
 static Node *relational_expr() { return shift_expr(); }
 
-static Node *equality_expr() { return relational_expr(); }
+static Node *equality_expr() {
+  Node *lhs = relational_expr();
+  if (consume(TK_EQ))
+    return new_node(ND_EQ, lhs, equality_expr());
+  else
+    return lhs;
+}
 
 static Node *and_expr() { return equality_expr(); }
 

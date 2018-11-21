@@ -26,6 +26,7 @@ enum {
   TK_RETURN,
   TK_IF,
   TK_ELSE,
+  TK_EQ,
   TK_EOF,
 };
 
@@ -40,6 +41,7 @@ enum {
   ND_FUNC,
   ND_RETURN,
   ND_IF,
+  ND_EQ,
   ND_NULL,
 };
 
