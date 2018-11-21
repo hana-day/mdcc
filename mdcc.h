@@ -24,6 +24,7 @@ enum {
   TK_INT,
   TK_IDENT,
   TK_RETURN,
+  TK_IF,
   TK_EOF,
 };
 
@@ -37,6 +38,7 @@ enum {
   ND_ROOT,
   ND_FUNC,
   ND_RETURN,
+  ND_IF,
   ND_NULL,
 };
 
@@ -74,34 +76,43 @@ struct Function;
 /**
  *  Function definition
  *  int "name" ("params") {"body"}
+ *
+ *  Function call
+ *  "name"("args")
+ *
+ *  If statement
+ *  if ("cond") { "then" }
+ *
+ *  Return statement
+ *  return "expr"
  */
 typedef struct Node {
   int ty; // Node type
+
   struct Node *lhs;
   struct Node *rhs;
+
   int val;
-
   Var *var;
-
   char *name;
+  Vector *params;
+  struct Node *body;
+  Vector *func_vars;
+  Vector *args;
+  struct Node *expr;
+  struct Node *cond;
+  struct Node *then;
 
   // Vector of statements
   Vector *stmts;
 
   // For the root node
   Vector *funcs;
-
-  // For function definition
-  Vector *params;
-  struct Node *body;
-  Vector *func_vars;
-
-  // For function call
-  Vector *args;
-
-  // For "return"
-  struct Node *expr;
 } Node;
+
+// Basic block
+typedef struct BB {
+} BB;
 
 // main.c
 __attribute__((noreturn)) void error(char *fmt, ...);

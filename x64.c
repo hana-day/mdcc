@@ -1,5 +1,7 @@
 #include "mdcc.h"
 
+static int nlabel = 1;
+
 static void emit(char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -10,6 +12,8 @@ static void emit(char *fmt, ...) {
 }
 
 static void emit_label(char *s) { printf("%s:\n", s); }
+
+static char *bb_label() { return format("MDCC_BB_%d", nlabel++); }
 
 static void emit_directive(char *s) { printf(".%s\n", s); }
 
@@ -196,6 +200,20 @@ static void gen(Node *node) {
     emit("pop rax");
     emit_epilogue();
     break;
+  case ND_IF: {
+    char *then_label = bb_label();
+    char *else_label = bb_label();
+    char *last_label = bb_label();
+    gen(node->cond);
+    emit("pop rax");
+    emit("cmp rax, 0");
+    emit("jz %s", else_label);
+    emit_label(then_label);
+    gen(node->then);
+    emit_label(else_label);
+    emit_label(last_label);
+    break;
+  }
   case '=':
     assign(node->lhs, node->rhs);
     break;

@@ -66,6 +66,7 @@ static void load_keywords() {
   keywords = new_map();
   map_set(keywords, "int", (void *)TK_INT);
   map_set(keywords, "return", (void *)TK_RETURN);
+  map_set(keywords, "if", (void *)TK_IF);
 }
 
 static char *scan_ident(Scanner *s) {

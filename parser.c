@@ -341,11 +341,26 @@ static Node *jmp_stmt() {
   bad_token(peek(pos), "Unknown jump statement");
 }
 
+static Node *stmt();
+
+static Node *selection_stmt() {
+  consume(TK_IF);
+  Node *node = new_node(ND_IF, NULL, NULL);
+  expect('(');
+  node->cond = expr();
+  expect(')');
+  node->then = stmt();
+  return node;
+}
+
 static Node *stmt() {
-  if (peek(pos)->ty == TK_RETURN) {
+  int ty = peek(pos)->ty;
+  if (ty == TK_RETURN) {
     return jmp_stmt();
-  } else if (peek(pos)->ty == '{') {
+  } else if (ty == '{') {
     return comp_stmt();
+  } else if (ty == TK_IF) {
+    return selection_stmt();
   } else {
     return expr_stmt();
   }
