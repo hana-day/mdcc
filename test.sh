@@ -48,4 +48,6 @@ test_ 2 "int main() { if (0) { return 1;} else { return 2;} return 3;}"
 test_ 2 "int main() { int a = 1; if (a-1) { return 1; } else if (a) { return 2; } else { return 3; }}"
 test_ 0 "int main() { int a = 1; int b = 1; if (a == b) { return 0; } else { return 1; }}"
 test_ 1 "int main() { int a = 1; int b = 2; if (a == b) { return 0; } else { return 1; }}"
+test_ 1 "int main() { int a = 1; int b = 1; if (a != b) { return 0; } else { return 1; }}"
+test_ 0 "int main() { int a = 1; int b = 2; if (a != b) { return 0; } else { return 1; }}"
 echo OK

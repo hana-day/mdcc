@@ -218,6 +218,8 @@ static Node *equality_expr() {
   Node *lhs = relational_expr();
   if (consume(TK_EQ))
     return new_node(ND_EQ, lhs, equality_expr());
+  else if (consume(TK_NEQ))
+    return new_node(ND_NEQ, lhs, equality_expr());
   else
     return lhs;
 }

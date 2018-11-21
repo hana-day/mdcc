@@ -218,7 +218,8 @@ static void gen(Node *node) {
     emit_label(last_label);
     break;
   }
-  case ND_EQ: {
+  case ND_EQ:
+  case ND_NEQ: {
     char *eq_label = bb_label();
     char *neq_label = bb_label();
     char *last_label = bb_label();
@@ -227,12 +228,21 @@ static void gen(Node *node) {
     emit("pop rdi");
     emit("pop rax");
     emit("cmp rdi, rax");
-    emit("je %s", eq_label);
-    emit_label(neq_label);
-    emit("push 0");
-    emit("jmp %s", last_label);
-    emit_label(eq_label);
-    emit("push 1");
+    if (node->ty == ND_EQ) {
+      emit("je %s", eq_label);
+      emit_label(neq_label);
+      emit("push 0");
+      emit("jmp %s", last_label);
+      emit_label(eq_label);
+      emit("push 1");
+    } else {
+      emit("jne %s", neq_label);
+      emit_label(eq_label);
+      emit("push 0");
+      emit("jmp %s", last_label);
+      emit_label(neq_label);
+      emit("push 1");
+    }
     emit_label(last_label);
     break;
   }
