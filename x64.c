@@ -2,6 +2,43 @@
 
 static int nlabel = 1;
 
+enum {
+  RAX = 0,
+  RDI,
+  RSI,
+  RDX,
+  RCX,
+  R8,
+  R9,
+  R10,
+  R11,
+  RBP,
+  RSP,
+  RBX,
+  R12,
+  R13,
+  R14,
+  R15,
+};
+
+char *regs64[] = {"rax", "rdi", "rsi", "rdx", "rcx", "r8",  "r9",  "r10",
+                  "r11", "rbp", "rsp", "rbx", "r12", "r13", "r14", "r15"};
+char *regs32[] = {"eax",  "edi", "esi", "edx", "ecx",  "r8d",  "r9d",  "r10d",
+                  "r11d", "ebp", "esp", "ebx", "r12d", "r13d", "r14d", "r15d"};
+char *regs8[] = {"al",   "dil", "sil", "dl", "cl",   "r8b",  "r9b",  "r10b",
+                 "r11b", "bpl", "spl", "bl", "r12b", "r13b", "r14b", "r15b"};
+
+static char *reg(int r, int size) {
+  if (size == 1)
+    return regs8[r];
+  else if (size == 4)
+    return regs32[r];
+  else if (size == 8)
+    return regs64[r];
+  else
+    error("Unsupported register size %d", size);
+}
+
 static void emit(char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -102,7 +139,7 @@ static void load_args(Node *func) {
 static void gen_ident(Node *node) {
   gen_lval(node);
   emit("pop rax");
-  emit("mov rax, [rax]");
+  emit("mov %s, [rax]", reg(RAX, node->var->ty->size));
   emit("push rax");
 }
 
