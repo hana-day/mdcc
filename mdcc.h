@@ -68,11 +68,16 @@ enum {
 typedef struct Type {
   int ty;
   struct Type *ptr_to;
+
+  // Byte size of types
+  // char: 1, int: 4, ptr: 8
+  int size;
 } Type;
 
 typedef struct Var {
   Type *ty;
   char *name;
+  // Offset from rbp
   int offset;
 } Var;
 
@@ -133,6 +138,7 @@ void *map_get(Map *map, char *key);
 void *map_get_def(Map *map, char *key, void *defv);
 bool isnondigit(char c);
 char *format(char *fmt, ...);
+int roundup(int x, int align);
 
 // token.c
 extern char *buf;

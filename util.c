@@ -54,3 +54,14 @@ char *format(char *fmt, ...) {
   va_end(ap);
   return strdup(buf);
 }
+
+/**
+ * Round up the given value to a multiple of size. Size must be a power of 2.
+ *
+ * Example:
+ *   roundup(4, 4) // => 4
+ *   roundup(3, 4) // => 4
+ *   roundup(5, 4) // => 8
+ *
+ */
+inline int roundup(int x, int align) { return (x + align - 1) & ~(align - 1); }

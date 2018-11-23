@@ -14,6 +14,13 @@ inline static Token *peek(int p) { return tokens->data[p]; }
 
 static bool istypename() { return peek(pos)->ty == TK_INT; }
 
+static Type *new_type(int ty, int size) {
+  Type *t = malloc(sizeof(Type));
+  t->ty = ty;
+  t->size = size;
+  return t;
+}
+
 static Scope *new_scope(Scope *outer) {
   Scope *scope = malloc(sizeof(Scope));
   scope->vars = new_map();
@@ -34,7 +41,6 @@ static Var *new_var(Type *ty, char *name) {
   Var *var = malloc(sizeof(Var));
   var->ty = ty;
   var->name = name;
-  var->offset = ++nfunc_vars;
   map_set(scope->vars, name, (void *)var);
   vec_push(func_vars, (void *)var);
   return var;
@@ -247,20 +253,16 @@ static Node *expr_stmt() {
 }
 
 static Type *decl_specifier() {
-  if (peek(pos)->ty == TK_INT) {
-    pos++;
-    Type *type = malloc(sizeof(Type));
-    type->ty = TY_INT;
-    return type;
+  if (consume(TK_INT)) {
+    return new_type(TY_INT, 4);
   }
   bad_token(peek(pos), format("Unknown declaration specifier"));
 }
 
 static Type *ptr(Type *ty) {
-  Type *newty = malloc(sizeof(Type));
-  newty->ty = TY_PTR;
-  newty->ptr_to = ty;
-  return newty;
+  Type *t = new_type(TY_PTR, 8);
+  t->ptr_to = ty;
+  return t;
 }
 
 static Node *declr(Type *ty);
