@@ -65,15 +65,20 @@ enum {
   TY_INT = 1,
   TY_CHAR,
   TY_PTR,
+  TY_ARR,
 };
 
 typedef struct Type {
   int ty;
   struct Type *ptr_to;
+  struct Type *arr_of;
+  int len; // for array
 
   // Byte size of types
   // char: 1, int: 4, ptr: 8
   int size;
+
+  int align;
 } Type;
 
 typedef struct Var {

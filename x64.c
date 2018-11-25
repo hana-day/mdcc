@@ -179,7 +179,8 @@ static void emit_prologue(Node *func) {
   int off = 0; // Offset from rbp
   for (int i = 0; i < func->func_vars->len; i++) {
     Var *var = func->func_vars->data[i];
-    off += 8;
+    off += var->ty->size;
+    off = roundup(off, var->ty->align);
     var->offset = -off;
   }
   emit("sub rsp, %d", roundup(off, 16));

@@ -20,6 +20,7 @@ static Type *new_type(int ty, int size) {
   Type *t = malloc(sizeof(Type));
   t->ty = ty;
   t->size = size;
+  t->align = size;
   return t;
 }
 
@@ -269,6 +270,16 @@ static Type *ptr(Type *ty) {
   return t;
 }
 
+static Type *arr(Type *base, int len) {
+  Type *ty = malloc(sizeof(Type));
+  ty->ty = TY_ARR;
+  ty->size = base->size * len;
+  ty->align = base->align;
+  ty->arr_of = base;
+  ty->len = len;
+  return ty;
+}
+
 static Node *declr(Type *ty);
 
 static Node *param_decl() {
@@ -292,6 +303,27 @@ static Vector *param_list() {
 static Vector *param_type_list() { return param_list(); }
 static Node *comp_stmt();
 
+static Type *read_arr(Type *ty) {
+  Vector *v = new_vec();
+
+  while (consume('[')) {
+    if (consume(']')) {
+      vec_push(v, (void *)-1);
+      continue;
+    }
+    Token *t = peek(pos);
+    if (t->ty != TK_NUM)
+      bad_token(t, "Expected number");
+    pos++;
+    vec_push(v, (void *)(uintptr_t)t->val);
+    expect(']');
+  }
+  for (int i = v->len - 1; i >= 0; i--) {
+    ty = arr(ty, (int)v->data[i]);
+  }
+  return ty;
+}
+
 static Node *direct_declr(Type *ty) {
   if (peek(pos)->ty != TK_IDENT)
     bad_token(peek(pos), "Token is not identifier.");
@@ -314,6 +346,7 @@ static Node *direct_declr(Type *ty) {
     // Variable definition
   } else {
     Node *node = new_node(ND_IDENT, NULL, NULL);
+    ty = read_arr(ty);
     node->var = new_var(ty, name);
     return node;
   }
