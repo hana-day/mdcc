@@ -22,6 +22,7 @@ typedef struct {
 enum {
   TK_NUM = 256,
   TK_INT,
+  TK_CHAR,
   TK_IDENT,
   TK_RETURN,
   TK_IF,
@@ -62,6 +63,7 @@ typedef struct {
 
 enum {
   TY_INT = 1,
+  TY_CHAR,
   TY_PTR,
 };
 
