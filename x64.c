@@ -204,7 +204,7 @@ static void gen(Node *node) {
     for (int i = 0; i < node->stmts->len; i++) {
       Node *stmt = node->stmts->data[i];
       if (stmt->ty == ND_NULL)
-        break;
+        continue;
       gen(stmt);
     }
     break;

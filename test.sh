@@ -52,4 +52,5 @@ test_ 1 "int main() { int a = 1; int b = 1; if (a != b) { return 0; } else { ret
 test_ 0 "int main() { int a = 1; int b = 2; if (a != b) { return 0; } else { return 1; }}"
 test_ 0 "int main() { int a = 2147483647; a = a + 1; return a; }"
 test_ 0 "int main() { int a = 255; a = a + 1; return a; }"
+test_ 1 "int main() { int a; return 1; }"
 echo OK
