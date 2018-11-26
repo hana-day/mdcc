@@ -86,7 +86,7 @@ static void gen_binary(Node *node) {
 static void gen_lval(Node *node) {
   if (node->ty == ND_IDENT) {
     emit("mov rax, rbp");
-    emit("sub rax, %d", node->var->offset * 8);
+    emit("sub rax, %d", node->var->offset);
     emit("push rax");
     return;
   }
@@ -179,9 +179,8 @@ static void emit_prologue(Node *func) {
   int off = 0; // Offset from rbp
   for (int i = 0; i < func->func_vars->len; i++) {
     Var *var = func->func_vars->data[i];
-    off += var->ty->size;
-    off = roundup(off, var->ty->align);
-    var->offset = -off;
+    off += 8;
+    var->offset = off;
   }
   emit("sub rsp, %d", roundup(off, 16));
   load_args(func);
