@@ -56,4 +56,5 @@ test_ 1 "int main() { int a; return 1; }"
 test_ 1 "int main() { int a[1]; return 1; }"
 test_ 1 "int main() { int a[2]; a[1] = 1; return a[1]; }"
 test_ 3 "int main() { int a[2]; a[0] = 1; a[1] = 2; return a[0]+a[1]; }"
+test_ 6 "int main() { int a[2][2]; a[0][0] = 1; a[0][1] = 2; a[1][1] = 3; return a[0][0] + a[0][1] + a[1][1]; }"
 echo OK

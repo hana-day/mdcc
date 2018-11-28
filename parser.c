@@ -156,17 +156,43 @@ static Node *primary_expr() {
   return new_node_null();
 }
 
+/**
+ * Convert multi-dimentional array indice to one-dimentional array index.
+ *
+ * Example:
+ *   arr_index(`3x2 array type`, [2, 1]); => 5
+ */
+static int arr_index(Type *arrtype, Vector *indice) {
+  if (indice->len > 2)
+    error("Unsupported dimension array");
+  if (indice->len == 1)
+    return (int)indice->data[0];
+  else
+    return (arrtype->arr_of->len * (int)indice->data[0] + (int)indice->data[1]);
+}
+
 static Node *postfix_expr() {
   Node *lhs = primary_expr();
-  if (consume('[')) {
-    Token *tok = peek(pos++);
-    if (tok->ty != TK_NUM)
-      bad_token(tok, "Exepected number for array index");
-    Node *node = new_node('-', lhs, new_node_num(tok->val * 8));
-    lhs = new_node(ND_DEREF, new_node_null(), node);
-    expect(']');
+  Var *var = lhs->var;
+  bool arrmode = false;
+  Vector *indice = new_vec();
+
+  while (1) {
+    if (consume('[')) {
+      arrmode = true;
+      Token *tok = peek(pos++);
+      if (tok->ty != TK_NUM)
+        bad_token(tok, "Exepected number for array index");
+      vec_push(indice, (void *)(uintptr_t)tok->val);
+      expect(']');
+    } else {
+      if (arrmode) {
+        lhs = new_node('-', lhs, new_node_num(arr_index(var->ty, indice) * 8));
+        lhs = new_node(ND_DEREF, new_node_null(), lhs);
+      }
+      return lhs;
+    }
   }
-  return lhs;
 }
 
 static Node *cast_expr();

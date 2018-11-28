@@ -183,6 +183,13 @@ static void emit_prologue(Node *func) {
     Var *var = func->func_vars->data[i];
     off += 8;
     var->offset = off;
+    if (var->ty->ty == TY_ARR) {
+      Type *t = var->ty;
+      while (t->ty == TY_ARR) {
+        off += t->size;
+        t = t->arr_of;
+      }
+    }
   }
   emit("sub rsp, %d", roundup(off, 16));
   load_args(func);
