@@ -156,7 +156,18 @@ static Node *primary_expr() {
   return new_node_null();
 }
 
-static Node *postfix_expr() { return primary_expr(); }
+static Node *postfix_expr() {
+  Node *lhs = primary_expr();
+  if (consume('[')) {
+    Token *tok = peek(pos++);
+    if (tok->ty != TK_NUM)
+      bad_token(tok, "Exepected number for array index");
+    Node *node = new_node('-', lhs, new_node_num(tok->val * 8));
+    lhs = new_node(ND_DEREF, new_node_null(), node);
+    expect(']');
+  }
+  return lhs;
+}
 
 static Node *cast_expr();
 

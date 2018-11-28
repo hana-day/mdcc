@@ -88,9 +88,11 @@ static void gen_lval(Node *node) {
     emit("mov rax, rbp");
     emit("sub rax, %d", node->var->offset);
     emit("push rax");
-    return;
+  } else if (node->ty == ND_DEREF) {
+    gen(node->rhs);
+  } else {
+    error("lvalue is not identifier.");
   }
-  error("lvalue is not identifier.");
 }
 
 static void assign(Node *lhs, Node *rhs) {
@@ -211,8 +213,10 @@ static void gen(Node *node) {
   case ND_NULL:
     break;
   case ND_IDENT:
-    gen_ident(node);
-    return;
+    if (node->var->ty->ty == TY_ARR)
+      gen_lval(node);
+    else
+      gen_ident(node);
     break;
   case ND_CALL:
     store_args(node);
@@ -223,7 +227,7 @@ static void gen(Node *node) {
     gen_lval(node->rhs);
     break;
   case ND_DEREF:
-    gen_ident(node->rhs);
+    gen(node->rhs);
     emit("pop rax");
     emit("mov rax, [rax]");
     emit("push rax");
@@ -238,7 +242,6 @@ static void gen(Node *node) {
       }
       emit_prologue(func);
       gen(func->body);
-      emit_epilogue();
     }
     break;
   case ND_RETURN:
