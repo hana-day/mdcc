@@ -7,7 +7,6 @@ typedef struct Scope {
 
 Vector *tokens;
 Scope *scope;
-int nfunc_vars;
 Vector *func_vars;
 
 inline static Token *peek(int p) { return tokens->data[p]; }
@@ -469,7 +468,6 @@ static Node *comp_stmt() {
 
 static Node *func_def() {
   func_vars = new_vec();
-  nfunc_vars = 0;
   Type *ty = decl_specifier();
   Node *node = declr(ty);
   if (node->ty != ND_FUNC)

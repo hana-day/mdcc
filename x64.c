@@ -180,15 +180,12 @@ static void emit_prologue(Node *func) {
   emit("mov rbp, rsp");
   int off = 0; // Offset from rbp
   for (int i = 0; i < func->func_vars->len; i++) {
-    Var *var = func->func_vars->data[i];
     off += 8;
+    Var *var = func->func_vars->data[i];
     var->offset = off;
     if (var->ty->ty == TY_ARR) {
       Type *t = var->ty;
-      while (t->ty == TY_ARR) {
-        off += t->size;
-        t = t->arr_of;
-      }
+      off += t->size;
     }
   }
   emit("sub rsp, %d", roundup(off, 16));
