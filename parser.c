@@ -11,9 +11,7 @@ Vector *func_vars;
 
 inline static Token *peek(int p) { return tokens->data[p]; }
 
-static bool istypename() {
-  return peek(pos)->ty == TK_INT || peek(pos)->ty == TK_CHAR;
-}
+static bool istypename() { return peek(pos)->ty == TK_INT; }
 
 static Type *new_type(int ty, int size) {
   Type *t = malloc(sizeof(Type));
@@ -293,9 +291,7 @@ static Node *expr_stmt() {
 
 static Type *decl_specifier() {
   if (consume(TK_INT)) {
-    return new_type(TY_INT, 4);
-  } else if (consume(TK_CHAR)) {
-    return new_type(TY_CHAR, 1);
+    return new_type(TY_INT, 8);
   }
   bad_token(peek(pos), format("Unknown declaration specifier"));
 }

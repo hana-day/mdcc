@@ -65,7 +65,6 @@ static void skipSpaces(Scanner *s) {
 static void load_keywords() {
   keywords = new_map();
   map_set(keywords, "int", (void *)TK_INT);
-  map_set(keywords, "char", (void *)TK_CHAR);
   map_set(keywords, "return", (void *)TK_RETURN);
   map_set(keywords, "if", (void *)TK_IF);
   map_set(keywords, "else", (void *)TK_ELSE);
