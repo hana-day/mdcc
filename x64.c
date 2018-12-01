@@ -84,15 +84,17 @@ static void gen_binary(Node *node) {
 }
 
 static void gen_lval(Node *node) {
+  if (node->ty == ND_DEREF) {
+    gen(node->rhs);
+    return;
+  }
   if (node->ty == ND_IDENT) {
     emit("mov rax, rbp");
     emit("sub rax, %d", node->var->offset);
     emit("push rax");
-  } else if (node->ty == ND_DEREF) {
-    gen(node->rhs);
-  } else {
-    error("lvalue is not identifier.");
+    return;
   }
+  error("Invalid lvalue.");
 }
 
 static void assign(Node *lhs, Node *rhs) {
@@ -140,6 +142,8 @@ static void load_args(Node *func) {
 
 static void gen_ident(Node *node) {
   gen_lval(node);
+  if (node->var->ty->ty == TY_ARR)
+    return;
   emit("pop rax");
   emit("mov %s, [rax]", reg(RAX, node->var->ty->size));
   emit("push rax");
@@ -217,10 +221,7 @@ static void gen(Node *node) {
   case ND_NULL:
     break;
   case ND_IDENT:
-    if (node->var->ty->ty == TY_ARR)
-      gen_lval(node);
-    else
-      gen_ident(node);
+    gen_ident(node);
     break;
   case ND_CALL:
     store_args(node);
