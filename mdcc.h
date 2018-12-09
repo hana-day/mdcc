@@ -156,6 +156,9 @@ Vector *tokenize();
 Node *parse();
 extern int nvars;
 
+// conv.c
+Node *conv(Node *node);
+
 // x64.c
 void gen_x64(Node *node);
 

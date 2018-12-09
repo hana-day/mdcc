@@ -27,6 +27,7 @@ int main(int argc, char **argv) {
 
   Vector *tokens = tokenize();
   Node *node = parse(tokens);
+  node = conv(node);
   gen_x64(node);
   return 0;
 }
