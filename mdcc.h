@@ -46,6 +46,7 @@ enum {
   ND_EQ,
   ND_NEQ,
   ND_NULL,
+  ND_ARRREF, // a[0][0]
 };
 
 typedef struct Position {
@@ -83,6 +84,8 @@ typedef struct Type {
 
 typedef struct Var {
   Type *ty;
+  // Type before the conversion
+  Type *prev_ty;
   char *name;
   // Offset from rbp
   int offset;
@@ -111,6 +114,7 @@ typedef struct Node {
 
   int val;
   Var *var;
+  Type *cty; // C type.
   char *name;
   Vector *params;
   struct Node *body;
@@ -126,6 +130,9 @@ typedef struct Node {
 
   // For the root node
   Vector *funcs;
+
+  // For array reference
+  Vector *indice;
 } Node;
 
 // Basic block
@@ -146,6 +153,11 @@ void *map_get_def(Map *map, char *key, void *defv);
 bool isnondigit(char c);
 char *format(char *fmt, ...);
 int roundup(int x, int align);
+Type *new_type(int ty, int size);
+Type *ptr(Type *ty);
+Node *new_node(int ty, Node *lhs, Node *rhs);
+Node *new_node_num(int val);
+Node *new_node_null();
 
 // token.c
 extern char *buf;

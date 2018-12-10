@@ -142,8 +142,6 @@ static void load_args(Node *func) {
 
 static void gen_ident(Node *node) {
   gen_lval(node);
-  if (node->var->ty->ty == TY_ARR)
-    return;
   emit("pop rax");
   emit("mov %s, [rax]", reg(RAX, node->var->ty->size));
   emit("push rax");
@@ -187,9 +185,8 @@ static void emit_prologue(Node *func) {
     off += 8;
     Var *var = func->func_vars->data[i];
     var->offset = off;
-    if (var->ty->ty == TY_ARR) {
-      Type *t = var->ty;
-      off += t->size;
+    if (var->prev_ty && var->prev_ty->ty == TY_ARR) {
+      off += var->prev_ty->size;
     }
   }
   emit("sub rsp, %d", roundup(off, 16));

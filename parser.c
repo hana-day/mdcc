@@ -13,14 +13,6 @@ inline static Token *peek(int p) { return tokens->data[p]; }
 
 static bool istypename() { return peek(pos)->ty == TK_INT; }
 
-static Type *new_type(int ty, int size) {
-  Type *t = malloc(sizeof(Type));
-  t->ty = ty;
-  t->size = size;
-  t->align = size;
-  return t;
-}
-
 static Scope *new_scope(Scope *outer) {
   Scope *scope = malloc(sizeof(Scope));
   scope->vars = new_map();
@@ -82,27 +74,6 @@ static void expect(int ty) {
   bad_token(t, format("Expected token %d", ty));
 }
 
-static Node *new_node(int ty, Node *lhs, Node *rhs) {
-  Node *node = malloc(sizeof(Node));
-  node->ty = ty;
-  node->lhs = lhs;
-  node->rhs = rhs;
-  return node;
-}
-
-static Node *new_node_num(int val) {
-  Node *node = malloc(sizeof(Node));
-  node->ty = ND_NUM;
-  node->val = val;
-  return node;
-}
-
-static Node *new_node_null() {
-  Node *node = malloc(sizeof(Node));
-  node->ty = ND_NULL;
-  return node;
-}
-
 static Node *new_node_ident(char *name, Var *var) {
   Node *node = malloc(sizeof(Node));
   node->ty = ND_IDENT;
@@ -153,21 +124,6 @@ static Node *primary_expr() {
   return new_node_null();
 }
 
-/**
- * Convert multi-dimentional array indice to one-dimentional array index.
- *
- * Example:
- *   arr_index(`3x2 array type`, [2, 1]); => 5
- */
-static int arr_index(Type *arrtype, Vector *indice) {
-  if (indice->len > 2)
-    error("Unsupported dimension array");
-  if (indice->len == 1)
-    return (int)indice->data[0];
-  else
-    return (arrtype->arr_of->len * (int)indice->data[0] + (int)indice->data[1]);
-}
-
 static Node *postfix_expr() {
   Node *lhs = primary_expr();
   Var *var = lhs->var;
@@ -176,17 +132,11 @@ static Node *postfix_expr() {
 
   while (1) {
     if (consume('[')) {
-      arrmode = true;
       Token *tok = peek(pos++);
-      if (tok->ty != TK_NUM)
-        bad_token(tok, "Exepected number for array index");
-      vec_push(indice, (void *)(uintptr_t)tok->val);
+      Node *node = new_node('-', lhs, new_node_num(tok->val));
+      lhs = new_node(ND_DEREF, new_node_null(), node);
       expect(']');
     } else {
-      if (arrmode) {
-        lhs = new_node('-', lhs, new_node_num(arr_index(var->ty, indice) * 8));
-        lhs = new_node(ND_DEREF, new_node_null(), lhs);
-      }
       return lhs;
     }
   }
@@ -294,12 +244,6 @@ static Type *decl_specifier() {
     return new_type(TY_INT, 8);
   }
   bad_token(peek(pos), format("Unknown declaration specifier"));
-}
-
-static Type *ptr(Type *ty) {
-  Type *t = new_type(TY_PTR, 8);
-  t->ptr_to = ty;
-  return t;
 }
 
 static Type *arr(Type *base, int len) {

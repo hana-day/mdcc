@@ -65,3 +65,38 @@ char *format(char *fmt, ...) {
  *
  */
 inline int roundup(int x, int align) { return (x + align - 1) & ~(align - 1); }
+
+Type *new_type(int ty, int size) {
+  Type *t = malloc(sizeof(Type));
+  t->ty = ty;
+  t->size = size;
+  t->align = size;
+  return t;
+}
+
+Type *ptr(Type *ty) {
+  Type *t = new_type(TY_PTR, 8);
+  t->ptr_to = ty;
+  return t;
+}
+
+Node *new_node(int ty, Node *lhs, Node *rhs) {
+  Node *node = malloc(sizeof(Node));
+  node->ty = ty;
+  node->lhs = lhs;
+  node->rhs = rhs;
+  return node;
+}
+
+Node *new_node_num(int val) {
+  Node *node = malloc(sizeof(Node));
+  node->ty = ND_NUM;
+  node->val = val;
+  return node;
+}
+
+Node *new_node_null() {
+  Node *node = malloc(sizeof(Node));
+  node->ty = ND_NULL;
+  return node;
+}
