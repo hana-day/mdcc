@@ -1,29 +1,11 @@
 #include "mdcc.h"
 
 static Node *arr_to_ptr(Node *node) {
-  if (node->var == NULL ||
-      (node->var->ty->ty != TY_ARR && node->var->prev_ty == NULL))
+  if (node->cty->ty != TY_ARR)
     return node;
-  if (node->var->prev_ty == NULL) {
-    node->var->prev_ty = node->var->ty;
-    node->var->ty = ptr(node->var->ty->arr_of);
-  }
-  return new_node(ND_ADDR, new_node_null(), node);
-}
-
-/**
- * Convert multi-dimentional array indice to one-dimentional array index.
- *
- * Example:
- *   arr_index(`3x2 array type`, [2, 1]); => 5
- */
-static int arr_index(Type *arrtype, Vector *indice) {
-  if (indice->len > 2)
-    error("Unsupported dimension array");
-  if (indice->len == 1)
-    return (int)indice->data[0];
-  else
-    return (arrtype->arr_of->len * (int)indice->data[0] + (int)indice->data[1]);
+  Node *node2 = new_node(ND_ADDR, new_node_null(), node);
+  node2->cty = ptr(node->cty->arr_of);
+  return node2;
 }
 
 static Node *walk(Node *node) {
@@ -49,7 +31,10 @@ static Node *walk(Node *node) {
     return node;
   case ND_DEREF:
     node->rhs = walk(node->rhs);
-    return node;
+    if (node->rhs->cty->ty != TY_PTR)
+      error("operand for dereference must be a pointer");
+    node->cty = node->rhs->cty->ptr_to;
+    return arr_to_ptr(node);
   case ND_ROOT:
     for (int i = 0; i < node->funcs->len; i++) {
       Node *func = node->funcs->data[i];
@@ -71,25 +56,29 @@ static Node *walk(Node *node) {
   case '=':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);
+    node->cty = node->lhs->cty;
     return node;
   case '+':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);
+    node->cty = new_int_ty();
     return node;
   case '-':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);
-    if (node->lhs->ty == ND_ADDR && node->lhs->rhs->ty == ND_IDENT &&
-        node->lhs->rhs->var->ty->ty == TY_PTR) {
-      Node *node2 = new_node(
-          '*', node->rhs, new_node_num(node->lhs->rhs->var->ty->ptr_to->size));
-      node->rhs = node2;
+    if (node->lhs->cty->ty == TY_PTR) {
+      node->rhs =
+          new_node('*', node->rhs, new_node_num(node->lhs->cty->ptr_to->size));
+      node->cty = node->lhs->cty;
+    } else {
+      node->cty = new_int_ty();
     }
     return node;
   case '*':
   case '/':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);
+    node->cty = new_int_ty();
     return node;
   }
   return NULL;

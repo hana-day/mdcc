@@ -84,8 +84,6 @@ typedef struct Type {
 
 typedef struct Var {
   Type *ty;
-  // Type before the conversion
-  Type *prev_ty;
   char *name;
   // Offset from rbp
   int offset;
@@ -140,9 +138,9 @@ typedef struct BB {
 } BB;
 
 // main.c
-__attribute__((noreturn)) void error(char *fmt, ...);
 
 // util.c
+__attribute__((noreturn)) void error(char *fmt, ...);
 Vector *new_vec(void);
 void vec_push(Vector *v, void *elm);
 void *vec_pop(Vector *v);
@@ -156,6 +154,7 @@ int roundup(int x, int align);
 Type *new_type(int ty, int size);
 Type *ptr(Type *ty);
 Node *new_node(int ty, Node *lhs, Node *rhs);
+Type *new_int_ty();
 Node *new_node_num(int val);
 Node *new_node_null();
 

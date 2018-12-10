@@ -3,15 +3,6 @@
 int pos = 0;
 int nvars;
 
-__attribute__((noreturn)) void error(char *fmt, ...) {
-  va_list args;
-  va_start(args, fmt);
-  vfprintf(stderr, fmt, args);
-  fprintf(stderr, "\n");
-  va_end(args);
-  exit(1);
-}
-
 static void usage() { error("Usage: mdcc <source file>"); }
 
 int main(int argc, char **argv) {

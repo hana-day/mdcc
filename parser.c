@@ -79,6 +79,7 @@ static Node *new_node_ident(char *name, Var *var) {
   node->ty = ND_IDENT;
   node->name = name;
   node->var = var;
+  node->cty = var->ty;
   return node;
 }
 
@@ -126,12 +127,10 @@ static Node *primary_expr() {
 
 static Node *postfix_expr() {
   Node *lhs = primary_expr();
-  Var *var = lhs->var;
   bool arrmode = false;
-  Vector *indice = new_vec();
-
   while (1) {
     if (consume('[')) {
+      arrmode = true;
       Token *tok = peek(pos++);
       Node *node = new_node('-', lhs, new_node_num(tok->val));
       lhs = new_node(ND_DEREF, new_node_null(), node);
@@ -241,9 +240,10 @@ static Node *expr_stmt() {
 
 static Type *decl_specifier() {
   if (consume(TK_INT)) {
-    return new_type(TY_INT, 8);
+    return new_int_ty();
   }
-  bad_token(peek(pos), format("Unknown declaration specifier"));
+  bad_token(peek(pos),
+            format("Unknown declaration specifier %d", peek(pos)->val));
 }
 
 static Type *arr(Type *base, int len) {
@@ -324,6 +324,7 @@ static Node *direct_declr(Type *ty) {
     Node *node = new_node(ND_IDENT, NULL, NULL);
     ty = read_arr(ty);
     node->var = new_var(ty, name);
+    node->cty = node->var->ty;
     return node;
   }
 }

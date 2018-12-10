@@ -2,6 +2,14 @@
 
 #define DEFAULT_VEC_SIZE 16
 
+__attribute__((noreturn)) void error(char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+
 Vector *new_vec() {
   Vector *v = malloc(sizeof(Vector));
   v->data = malloc(sizeof(void *) * DEFAULT_VEC_SIZE);
@@ -88,10 +96,13 @@ Node *new_node(int ty, Node *lhs, Node *rhs) {
   return node;
 }
 
+Type *new_int_ty() { return new_type(TY_INT, 8); }
+
 Node *new_node_num(int val) {
   Node *node = malloc(sizeof(Node));
   node->ty = ND_NUM;
   node->val = val;
+  node->cty = new_int_ty();
   return node;
 }
 

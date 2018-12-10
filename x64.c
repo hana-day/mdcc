@@ -143,7 +143,7 @@ static void load_args(Node *func) {
 static void gen_ident(Node *node) {
   gen_lval(node);
   emit("pop rax");
-  emit("mov %s, [rax]", reg(RAX, node->var->ty->size));
+  emit("mov %s, [rax]", reg(RAX, node->cty->size));
   emit("push rax");
 }
 
@@ -182,12 +182,10 @@ static void emit_prologue(Node *func) {
   emit("mov rbp, rsp");
   int off = 0; // Offset from rbp
   for (int i = 0; i < func->func_vars->len; i++) {
-    off += 8;
     Var *var = func->func_vars->data[i];
+    off += var->ty->size;
+    off = roundup(off, var->ty->align);
     var->offset = off;
-    if (var->prev_ty && var->prev_ty->ty == TY_ARR) {
-      off += var->prev_ty->size;
-    }
   }
   emit("sub rsp, %d", roundup(off, 16));
   load_args(func);
