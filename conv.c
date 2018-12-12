@@ -89,6 +89,7 @@ static Node *walk(Node *node) {
     return node;
   case '*':
   case '/':
+  case '%':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);
     node->cty = new_int_ty();

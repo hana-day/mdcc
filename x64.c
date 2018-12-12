@@ -40,6 +40,11 @@ static void gen_binary(Node *node) {
     emit("mov rdx, 0");
     emit("div rdi");
     break;
+  case '%':
+    emit("mov rdx, 0");
+    emit("div rdi");
+    emit("mov rax, rdx");
+    break;
   default:
     error("Unknown binary operator %d", node->ty);
   }
@@ -299,6 +304,7 @@ static void gen(Node *node) {
   case '-':
   case '*':
   case '/':
+  case '%':
     gen_binary(node);
     return;
     break;
