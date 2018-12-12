@@ -29,6 +29,7 @@ enum {
   TK_ELSE,
   TK_EQ,
   TK_NEQ,
+  TK_FOR,
   TK_EOF,
 };
 
@@ -46,7 +47,7 @@ enum {
   ND_EQ,
   ND_NEQ,
   ND_NULL,
-  ND_ARRREF, // a[0][0]
+  ND_FOR,
 };
 
 typedef struct Position {
@@ -107,6 +108,9 @@ struct Function;
  *
  *  Return statement
  *  return "expr"
+ *
+ *  For statement
+ *  for ("init"; "cond"; "after") "body"
  */
 typedef struct Node {
   int ty; // Node type
@@ -126,6 +130,8 @@ typedef struct Node {
   struct Node *cond;
   struct Node *then;
   struct Node *els;
+  struct Node *init;
+  struct Node *after;
 
   // Vector of statements
   Vector *stmts;

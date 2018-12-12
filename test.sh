@@ -60,4 +60,7 @@ test_ 1 "int f(int a[1]) { return a[0]; return 0; } int main() {int a[1]; a[0] =
 test_ 1 "int f(int a[2]) { return a[1]; return 0; } int main() {int a[2]; a[1] = 1; return f(a); }"
 test_ 1 "int f(int a[2][2]) { return a[1][0]; return 0; } int main() {int a[2][2]; a[1][0] = 1; return f(a); }"
 test_ 2 "int f(int *a) { *a = 2; return 0; } int main() { int a; a = 1; f(&a); return a;}"
+test_ 2 "int main() { int a; int b; for (a = 0; a != 3; a = a + 1) {b = a;} return b; }"
+test_ 1 "int main() { int a[1]; int i = 0; for (i = 0; i != 1; i = i + 1) { a[i] = 1; } return a[0]; }"
+test_ 2 "int main() { int a[2][2]; int i; int j; for (i = 0; i != 2; i = i + 1) { for (j = 0; j != 2; j = j + 1) { a[i][j] = i + j; }}  return a[1][1]; }"
 echo OK

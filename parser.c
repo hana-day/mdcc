@@ -131,8 +131,7 @@ static Node *postfix_expr() {
   while (1) {
     if (consume('[')) {
       arrmode = true;
-      Token *tok = peek(pos++);
-      Node *node = new_node('-', lhs, new_node_num(tok->val));
+      Node *node = new_node('-', lhs, expr());
       lhs = new_node(ND_DEREF, new_node_null(), node);
       expect(']');
     } else {
@@ -379,6 +378,25 @@ static Node *selection_stmt() {
   return node;
 }
 
+static Node *iter_stmt() {
+  if (consume(TK_FOR)) {
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_FOR;
+    expect('(');
+    scope = new_scope(scope);
+    node->init = expr();
+    expect(';');
+    node->cond = expr();
+    expect(';');
+    node->after = expr();
+    expect(')');
+    node->body = stmt();
+    scope = scope->outer;
+    return node;
+  }
+  return new_node_null();
+}
+
 static Node *stmt() {
   int ty = peek(pos)->ty;
   if (ty == TK_RETURN) {
@@ -387,6 +405,8 @@ static Node *stmt() {
     return comp_stmt();
   } else if (ty == TK_IF) {
     return selection_stmt();
+  } else if (ty == TK_FOR) {
+    return iter_stmt();
   } else {
     return expr_stmt();
   }

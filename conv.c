@@ -54,6 +54,12 @@ static Node *walk(Node *node) {
     node->then = walk(node->then);
     node->els = walk(node->els);
     return node;
+  case ND_FOR:
+    node->init = walk(node->init);
+    node->cond = walk(node->cond);
+    node->after = walk(node->after);
+    node->body = walk(node->body);
+    return node;
   case ND_EQ:
   case ND_NEQ:
   case '=':
