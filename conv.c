@@ -25,9 +25,12 @@ static Node *walk(Node *node) {
   case ND_IDENT:
     return arr_to_ptr(node);
   case ND_CALL:
+    for (int i = 0; i < node->args->len; i++)
+      node->args->data[i] = walk(node->args->data[i]);
     return node;
   case ND_ADDR:
     node->rhs = walk(node->rhs);
+    node->cty = ptr(node->rhs->cty);
     return node;
   case ND_DEREF:
     node->rhs = walk(node->rhs);

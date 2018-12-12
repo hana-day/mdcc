@@ -87,6 +87,10 @@ typedef struct Var {
   char *name;
   // Offset from rbp
   int offset;
+
+  // has_address is true if the variable is passed as
+  // an pointer-like argument of a function.
+  bool has_address;
 } Var;
 
 struct Function;

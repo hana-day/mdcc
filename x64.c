@@ -92,6 +92,11 @@ static void gen_lval(Node *node) {
     emit("mov rax, rbp");
     emit("sub rax, %d", node->var->offset);
     emit("push rax");
+    if (node->cty->ty == TY_ARR && node->var->has_address) {
+      emit("pop rax");
+      emit("mov rax, [rax]");
+      emit("push rax");
+    }
     return;
   }
   error("Invalid lvalue.");
@@ -111,6 +116,9 @@ static void load_args(Node *func) {
   for (int i = 0; i < func->params->len; i++) {
     Node *param = func->params->data[i];
     gen_lval(param);
+    if (param->cty->ty == TY_PTR || param->cty->ty == TY_ARR) {
+      param->var->has_address = true;
+    }
     switch (i) {
     case 0:
       emit("push rdi");
@@ -143,7 +151,7 @@ static void load_args(Node *func) {
 static void gen_ident(Node *node) {
   gen_lval(node);
   emit("pop rax");
-  emit("mov %s, [rax]", reg(RAX, node->cty->size));
+  emit("mov rax, [rax]");
   emit("push rax");
 }
 
@@ -181,11 +189,12 @@ static void emit_prologue(Node *func) {
   emit("push rbp");
   emit("mov rbp, rsp");
   int off = 0; // Offset from rbp
+  off += 8;
   for (int i = 0; i < func->func_vars->len; i++) {
     Var *var = func->func_vars->data[i];
+    var->offset = off;
     off += var->ty->size;
     off = roundup(off, var->ty->align);
-    var->offset = off;
   }
   emit("sub rsp, %d", roundup(off, 16));
   load_args(func);
