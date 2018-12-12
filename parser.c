@@ -393,6 +393,14 @@ static Node *iter_stmt() {
     node->body = stmt();
     scope = scope->outer;
     return node;
+  } else if (consume(TK_WHILE)) {
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_WHILE;
+    expect('(');
+    node->cond = expr();
+    expect(')');
+    node->body = stmt();
+    return node;
   }
   return new_node_null();
 }
@@ -406,6 +414,8 @@ static Node *stmt() {
   } else if (ty == TK_IF) {
     return selection_stmt();
   } else if (ty == TK_FOR) {
+    return iter_stmt();
+  } else if (ty == TK_WHILE) {
     return iter_stmt();
   } else {
     return expr_stmt();

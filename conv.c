@@ -60,6 +60,10 @@ static Node *walk(Node *node) {
     node->after = walk(node->after);
     node->body = walk(node->body);
     return node;
+  case ND_WHILE:
+    node->cond = walk(node->cond);
+    node->body = walk(node->body);
+    return node;
   case ND_EQ:
   case ND_NEQ:
   case '=':

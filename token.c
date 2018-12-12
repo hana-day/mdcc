@@ -69,6 +69,7 @@ static void load_keywords() {
   map_set(keywords, "if", (void *)TK_IF);
   map_set(keywords, "else", (void *)TK_ELSE);
   map_set(keywords, "for", (void *)TK_FOR);
+  map_set(keywords, "while", (void *)TK_WHILE);
 }
 
 static char *scan_ident(Scanner *s) {

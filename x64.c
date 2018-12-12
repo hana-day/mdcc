@@ -288,6 +288,19 @@ static void gen(Node *node) {
     emit_label(last_label);
     break;
   }
+  case ND_WHILE: {
+    char *cond_label = bb_label();
+    char *last_label = bb_label();
+    emit_label(cond_label);
+    gen(node->cond);
+    emit("pop rax");
+    emit("cmp rax, 0");
+    emit("jz %s", last_label);
+    gen(node->body);
+    emit("jmp %s", cond_label);
+    emit_label(last_label);
+    break;
+  }
   case ND_EQ:
   case ND_NEQ: {
     char *eq_label = bb_label();

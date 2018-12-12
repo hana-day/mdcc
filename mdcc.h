@@ -30,6 +30,7 @@ enum {
   TK_EQ,
   TK_NEQ,
   TK_FOR,
+  TK_WHILE,
   TK_EOF,
 };
 
@@ -48,6 +49,7 @@ enum {
   ND_NEQ,
   ND_NULL,
   ND_FOR,
+  ND_WHILE,
 };
 
 typedef struct Position {
@@ -111,6 +113,9 @@ struct Function;
  *
  *  For statement
  *  for ("init"; "cond"; "after") "body"
+ *
+ *  While statement
+ *  while ("cond") "body"
  */
 typedef struct Node {
   int ty; // Node type
