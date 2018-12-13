@@ -203,7 +203,14 @@ static Node *additive_expr() {
 
 static Node *shift_expr() { return additive_expr(); }
 
-static Node *relational_expr() { return shift_expr(); }
+static Node *relational_expr() {
+  Node *lhs = shift_expr();
+  if (consume('<'))
+    return new_node('<', lhs, relational_expr());
+  else if (consume('>'))
+    return new_node('>', lhs, relational_expr());
+  return lhs;
+}
 
 static Node *equality_expr() {
   Node *lhs = relational_expr();

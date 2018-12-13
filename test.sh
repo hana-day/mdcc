@@ -65,4 +65,8 @@ test_ 1 "int main() { int a[1]; int i = 0; for (i = 0; i != 1; i = i + 1) { a[i]
 test_ 2 "int main() { int a[2][2]; int i; int j; for (i = 0; i != 2; i = i + 1) { for (j = 0; j != 2; j = j + 1) { a[i][j] = i + j; }}  return a[1][1]; }"
 test_ 1 "int main() { int a; a = 3; while (a != 1) { a = a - 1; }  return a; }"
 test_ 1 "int main() { int a = 11; a = a % 10; return a;}"
+test_ 1 "int main() { return 1 < 2; }"
+test_ 0 "int main() { return 2 < 1; }"
+test_ 1 "int main() { return 2 > 1; }"
+test_ 0 "int main() { return 1 > 2; }"
 echo OK

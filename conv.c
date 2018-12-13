@@ -66,6 +66,8 @@ static Node *walk(Node *node) {
     return node;
   case ND_EQ:
   case ND_NEQ:
+  case '<':
+  case '>':
   case '=':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);

@@ -51,6 +51,37 @@ static void gen_binary(Node *node) {
   emit("push rax");
 }
 
+static void gen_cmp(Node *node) {
+  char *true_label = bb_label();
+  char *last_label = bb_label();
+  gen(node->lhs);
+  gen(node->rhs);
+  emit("pop rdi");
+  emit("pop rax");
+  emit("cmp rax, rdi");
+  switch (node->ty) {
+  case ND_EQ:
+    emit("je %s", true_label);
+    break;
+  case ND_NEQ:
+    emit("jne %s", true_label);
+    break;
+  case '<':
+    emit("jl %s", true_label);
+    break;
+  case '>':
+    emit("jg %s", true_label);
+    break;
+  default:
+    error("Unknown comparator %d", node->ty);
+  }
+  emit("push 0");
+  emit("jmp %s", last_label);
+  emit_label(true_label);
+  emit("push 1");
+  emit_label(last_label);
+}
+
 static void gen_lval(Node *node) {
   if (node->ty == ND_DEREF) {
     gen(node->rhs);
@@ -270,33 +301,11 @@ static void gen(Node *node) {
     break;
   }
   case ND_EQ:
-  case ND_NEQ: {
-    char *eq_label = bb_label();
-    char *neq_label = bb_label();
-    char *last_label = bb_label();
-    gen(node->lhs);
-    gen(node->rhs);
-    emit("pop rdi");
-    emit("pop rax");
-    emit("cmp rdi, rax");
-    if (node->ty == ND_EQ) {
-      emit("je %s", eq_label);
-      emit_label(neq_label);
-      emit("push 0");
-      emit("jmp %s", last_label);
-      emit_label(eq_label);
-      emit("push 1");
-    } else {
-      emit("jne %s", neq_label);
-      emit_label(eq_label);
-      emit("push 0");
-      emit("jmp %s", last_label);
-      emit_label(neq_label);
-      emit("push 1");
-    }
-    emit_label(last_label);
+  case ND_NEQ:
+  case '<':
+  case '>':
+    gen_cmp(node);
     break;
-  }
   case '=':
     assign(node->lhs, node->rhs);
     break;
@@ -306,7 +315,6 @@ static void gen(Node *node) {
   case '/':
   case '%':
     gen_binary(node);
-    return;
     break;
   default:
     error("Unknown node type %d", node->ty);
