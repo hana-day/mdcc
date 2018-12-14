@@ -114,70 +114,59 @@ Vector *tokenize() {
 
   while (1) {
     char ch = s->ch;
+    Token *tok = NULL;
 
     if (ch < 0) {
-      vec_push(tokens, new_token(s, TK_EOF));
-      break;
+      tok = new_token(s, TK_EOF);
     } else if (isspace(ch)) {
       skipSpaces(s);
     } else if (isnondigit(ch)) {
       char *name = scan_ident(s);
-      Token *tok =
-          new_token(s, (int)map_get_def(keywords, name, (void *)TK_IDENT));
+      tok = new_token(s, (int)map_get_def(keywords, name, (void *)TK_IDENT));
       tok->name = name;
-      vec_push(tokens, tok);
     } else if (isdigit(ch)) {
-      Token *tok = new_token(s, TK_NUM);
+      tok = new_token(s, TK_NUM);
       tok->val = scan_number(s);
-      vec_push(tokens, tok);
     } else if (ch == '\'') {
       next(s);
-      Token *tok = new_token(s, TK_NUM);
+      tok = new_token(s, TK_NUM);
       tok->val = scan_char(s);
-      vec_push(tokens, tok);
     } else if (ch == '+') {
-      vec_push(tokens, new_token(s, switch2(s, '+', TK_ADD_EQ)));
+      tok = new_token(s, switch2(s, '+', TK_ADD_EQ));
     } else if (ch == '-') {
-      vec_push(tokens, new_token(s, switch2(s, '-', TK_SUB_EQ)));
+      tok = new_token(s, switch2(s, '-', TK_SUB_EQ));
     } else if (ch == '*') {
-      vec_push(tokens, new_token(s, switch2(s, '*', TK_MUL_EQ)));
+      tok = new_token(s, switch2(s, '*', TK_MUL_EQ));
     } else if (ch == '/') {
-      vec_push(tokens, new_token(s, switch2(s, '/', TK_DIV_EQ)));
+      tok = new_token(s, switch2(s, '/', TK_DIV_EQ));
     } else if (ch == '!') {
-      next(s);
-      if (s->ch == '=') {
-        next(s);
-        vec_push(tokens, new_token(s, TK_NEQ));
-      } else {
-        vec_push(tokens, new_token(s, ch));
-      }
+      tok = new_token(s, switch2(s, '!', TK_NEQ));
     } else if (ch == '=') {
-      next(s);
-      if (s->ch == '=') {
-        next(s);
-        vec_push(tokens, new_token(s, TK_EQ));
-      } else {
-        vec_push(tokens, new_token(s, ch));
-      }
+      tok = new_token(s, switch2(s, '=', TK_EQ));
     } else if (ch == '<') {
       next(s);
       if (s->ch == '<') {
         next(s);
-        vec_push(tokens, new_token(s, TK_SHL));
+        tok = new_token(s, TK_SHL);
       } else {
-        vec_push(tokens, new_token(s, ch));
+        tok = new_token(s, ch);
       }
     } else if (ch == '>') {
       next(s);
       if (s->ch == '>') {
         next(s);
-        vec_push(tokens, new_token(s, TK_SHR));
+        tok = new_token(s, TK_SHR);
       } else {
-        vec_push(tokens, new_token(s, ch));
+        tok = new_token(s, ch);
       }
     } else {
-      vec_push(tokens, new_token(s, ch));
+      tok = new_token(s, ch);
       next(s);
+    }
+    if (tok != NULL) {
+      vec_push(tokens, tok);
+      if (tok->ty == TK_EOF)
+        break;
     }
   }
   return tokens;
