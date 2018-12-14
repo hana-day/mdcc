@@ -97,13 +97,31 @@ static int scan_number(Scanner *s) {
   return n;
 }
 
-static int switch2(Scanner *s, int tok1, int tok2) {
+static int switch2(Scanner *s, int tok0, int tok1) {
   next(s);
   if (s->ch == '=') {
     next(s);
+    return tok1;
+  }
+  return tok0;
+}
+
+static int switch4(Scanner *s, int tok0, int tok1, int tok2, int tok3) {
+  char ch = s->ch;
+  next(s);
+  if (s->ch == '=') {
+    next(s);
+    return tok1;
+  }
+  if (s->ch == ch) {
+    next(s);
+    if (s->ch == '=') {
+      next(s);
+      return tok3;
+    }
     return tok2;
   }
-  return tok1;
+  return tok0;
 }
 
 Vector *tokenize() {
@@ -144,21 +162,9 @@ Vector *tokenize() {
     } else if (ch == '=') {
       tok = new_token(s, switch2(s, '=', TK_EQ));
     } else if (ch == '<') {
-      next(s);
-      if (s->ch == '<') {
-        next(s);
-        tok = new_token(s, TK_SHL);
-      } else {
-        tok = new_token(s, ch);
-      }
+      tok = new_token(s, switch4(s, '<', TK_LEQ, TK_SHL, TK_SHL_EQ));
     } else if (ch == '>') {
-      next(s);
-      if (s->ch == '>') {
-        next(s);
-        tok = new_token(s, TK_SHR);
-      } else {
-        tok = new_token(s, ch);
-      }
+      tok = new_token(s, switch4(s, '>', TK_GEQ, TK_SHR, TK_SHR_EQ));
     } else {
       tok = new_token(s, ch);
       next(s);

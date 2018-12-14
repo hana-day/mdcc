@@ -164,6 +164,10 @@ static Node *assignment_expr() {
     return new_node('=', lhs, new_node('*', lhs, assignment_expr()));
   } else if (consume(TK_DIV_EQ)) {
     return new_node('=', lhs, new_node('/', lhs, assignment_expr()));
+  } else if (consume(TK_SHL_EQ)) {
+    return new_node('=', lhs, new_node(ND_SHL, lhs, assignment_expr()));
+  } else if (consume(TK_SHR_EQ)) {
+    return new_node('=', lhs, new_node(ND_SHR, lhs, assignment_expr()));
   } else {
     pos = prev_pos;
     return conditional_expr();

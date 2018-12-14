@@ -37,6 +37,10 @@ enum {
   TK_SUB_EQ, // -=
   TK_MUL_EQ, // *=
   TK_DIV_EQ, // /=
+  TK_SHL_EQ, // <<=
+  TK_SHR_EQ, // >>=
+  TK_GEQ,    // >=
+  TK_LEQ,    // <=
   TK_EOF,
 };
 
