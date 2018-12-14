@@ -142,6 +142,22 @@ Vector *tokenize() {
       } else {
         vec_push(tokens, new_token(s, ch));
       }
+    } else if (ch == '<') {
+      next(s);
+      if (s->ch == '<') {
+        next(s);
+        vec_push(tokens, new_token(s, TK_SHL));
+      } else {
+        vec_push(tokens, new_token(s, ch));
+      }
+    } else if (ch == '>') {
+      next(s);
+      if (s->ch == '>') {
+        next(s);
+        vec_push(tokens, new_token(s, TK_SHR));
+      } else {
+        vec_push(tokens, new_token(s, ch));
+      }
     } else {
       vec_push(tokens, new_token(s, ch));
       next(s);

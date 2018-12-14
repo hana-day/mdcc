@@ -45,6 +45,9 @@ static void gen_binary(Node *node) {
     emit("div rdi");
     emit("mov rax, rdx");
     break;
+  case ND_SHL:
+    emit("shl rax, rdi");
+    break;
   default:
     error("Unknown binary operator %d", node->ty);
   }
@@ -80,6 +83,22 @@ static void gen_cmp(Node *node) {
   emit_label(true_label);
   emit("push 1");
   emit_label(last_label);
+}
+
+static void gen_shift(Node *node) {
+  gen(node->lhs);
+  gen(node->rhs);
+  emit("pop rcx");
+  emit("pop rax");
+  switch (node->ty) {
+  case ND_SHL:
+    emit("shl rax, cl");
+    break;
+  case ND_SHR:
+    emit("shr rax, cl");
+    break;
+  }
+  emit("push rax");
 }
 
 static void gen_lval(Node *node) {
@@ -315,6 +334,10 @@ static void gen(Node *node) {
   case '/':
   case '%':
     gen_binary(node);
+    break;
+  case ND_SHL:
+  case ND_SHR:
+    gen_shift(node);
     break;
   default:
     error("Unknown node type %d", node->ty);

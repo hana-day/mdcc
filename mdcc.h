@@ -31,6 +31,8 @@ enum {
   TK_NEQ,
   TK_FOR,
   TK_WHILE,
+  TK_SHL,
+  TK_SHR,
   TK_EOF,
 };
 
@@ -49,6 +51,8 @@ enum {
   ND_NEQ,
   ND_NULL,
   ND_FOR,
+  ND_SHL,
+  ND_SHR,
   ND_WHILE,
 };
 

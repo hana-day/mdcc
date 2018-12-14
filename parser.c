@@ -201,7 +201,14 @@ static Node *additive_expr() {
   }
 }
 
-static Node *shift_expr() { return additive_expr(); }
+static Node *shift_expr() {
+  Node *lhs = additive_expr();
+  if (consume(TK_SHL))
+    return new_node(ND_SHL, lhs, shift_expr());
+  else if (consume(TK_SHR))
+    return new_node(ND_SHR, lhs, shift_expr());
+  return lhs;
+}
 
 static Node *relational_expr() {
   Node *lhs = shift_expr();

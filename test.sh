@@ -69,4 +69,6 @@ test_ 1 "int main() { return 1 < 2; }"
 test_ 0 "int main() { return 2 < 1; }"
 test_ 1 "int main() { return 2 > 1; }"
 test_ 0 "int main() { return 1 > 2; }"
+test_ 4 "int main() { return 1 << 2; }"
+test_ 1 "int main() { return 4 >> 2; }"
 echo OK
