@@ -97,6 +97,15 @@ static int scan_number(Scanner *s) {
   return n;
 }
 
+static int switch2(Scanner *s, int tok1, int tok2) {
+  next(s);
+  if (s->ch == '=') {
+    next(s);
+    return tok2;
+  }
+  return tok1;
+}
+
 Vector *tokenize() {
   load_keywords();
 
@@ -126,6 +135,14 @@ Vector *tokenize() {
       Token *tok = new_token(s, TK_NUM);
       tok->val = scan_char(s);
       vec_push(tokens, tok);
+    } else if (ch == '+') {
+      vec_push(tokens, new_token(s, switch2(s, '+', TK_ADD_EQ)));
+    } else if (ch == '-') {
+      vec_push(tokens, new_token(s, switch2(s, '-', TK_SUB_EQ)));
+    } else if (ch == '*') {
+      vec_push(tokens, new_token(s, switch2(s, '*', TK_MUL_EQ)));
+    } else if (ch == '/') {
+      vec_push(tokens, new_token(s, switch2(s, '/', TK_DIV_EQ)));
     } else if (ch == '!') {
       next(s);
       if (s->ch == '=') {

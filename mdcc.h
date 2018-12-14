@@ -33,6 +33,10 @@ enum {
   TK_WHILE,
   TK_SHL,
   TK_SHR,
+  TK_ADD_EQ, // +=
+  TK_SUB_EQ, // -=
+  TK_MUL_EQ, // *=
+  TK_DIV_EQ, // /=
   TK_EOF,
 };
 

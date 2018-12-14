@@ -56,15 +56,6 @@ static bool consume(int ty) {
   return true;
 }
 
-static bool consume_str(char *s) {
-  for (int i = 0; i < strlen(s); i++) {
-    if (peek(pos + i)->ty == TK_EOF || s[i] != peek(pos + i)->ty)
-      return false;
-  }
-  pos += strlen(s);
-  return true;
-}
-
 static void expect(int ty) {
   Token *t = peek(pos);
   if (t->ty == ty) {
@@ -165,14 +156,14 @@ static Node *assignment_expr() {
   // conditional-expression.
   if (consume('=')) {
     return new_node('=', lhs, assignment_expr());
-  } else if (consume_str("*=")) {
-    return new_node('=', lhs, new_node('*', lhs, assignment_expr()));
-  } else if (consume_str("/=")) {
-    return new_node('=', lhs, new_node('/', lhs, assignment_expr()));
-  } else if (consume_str("+=")) {
+  } else if (consume(TK_ADD_EQ)) {
     return new_node('=', lhs, new_node('+', lhs, assignment_expr()));
-  } else if (consume_str("-=")) {
+  } else if (consume(TK_SUB_EQ)) {
     return new_node('=', lhs, new_node('-', lhs, assignment_expr()));
+  } else if (consume(TK_MUL_EQ)) {
+    return new_node('=', lhs, new_node('*', lhs, assignment_expr()));
+  } else if (consume(TK_DIV_EQ)) {
+    return new_node('=', lhs, new_node('/', lhs, assignment_expr()));
   } else {
     pos = prev_pos;
     return conditional_expr();
