@@ -88,4 +88,5 @@ test_ 1 "int main() { int a = 2; int b = --a; return b; }"
 test_ 3 "int main() { int a = 1; int b = a++; return a+b; }"
 test_ 3 "int main() { int a = 1; int b = a++; return a+b; }"
 test_ 3 "int main() { int a = 1; int b = 1; a = a++ + ++b; return a; }"
+test_ 3 "int main() { int a = 2; int b = a--; return a+b; }"
 echo OK

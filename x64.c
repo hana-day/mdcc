@@ -187,7 +187,16 @@ static void gen_postfix_incdec(Node *node) {
   emit("pop rdi");
   // Save the value before postfix inc/dec into the register.
   emit("mov rcx, rdi");
-  emit("add rdi, 1");
+  switch (node->ty) {
+  case ND_INC:
+    emit("add rdi, 1");
+    break;
+  case ND_DEC:
+    emit("sub rdi, 1");
+    break;
+  default:
+    error("Unknown node type %d", node->ty);
+  }
   emit("pop rax");
   emit("mov [rax], rdi");
   emit("push rcx");
@@ -422,6 +431,7 @@ static void gen(Node *node) {
     gen_bitwise(node);
     break;
   case ND_INC:
+  case ND_DEC:
     gen_postfix_incdec(node);
     break;
   default:
