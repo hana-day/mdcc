@@ -164,7 +164,7 @@ Vector *tokenize() {
       tok = new_token(s, TK_NUM);
       tok->val = scan_char(s);
     } else if (ch == '+') {
-      tok = new_token(s, switch2(s, '+', TK_ADD_EQ));
+      tok = new_token(s, switch3(s, '+', TK_ADD_EQ, TK_INC));
     } else if (ch == '-') {
       tok = new_token(s, switch2(s, '-', TK_SUB_EQ));
     } else if (ch == '*') {

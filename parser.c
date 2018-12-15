@@ -138,6 +138,10 @@ static Node *unary_expr() {
     return new_node(ND_ADDR, new_node_null(), cast_expr());
   if (consume('*'))
     return new_node(ND_DEREF, new_node_null(), cast_expr());
+  if (consume(TK_INC)) {
+    Node *lhs = unary_expr();
+    return new_node('=', lhs, new_node('+', lhs, new_node_num(1)));
+  }
   return postfix_expr();
 }
 
