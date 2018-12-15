@@ -134,6 +134,9 @@ static void gen_bitwise(Node *node) {
   case '&':
     emit("and rax, rdi");
     break;
+  case '|':
+    emit("or rax, rdi");
+    break;
   default:
     error("Unknown operator %d", node->ty);
   }
@@ -399,6 +402,7 @@ static void gen(Node *node) {
     gen_logical(node);
     break;
   case '&':
+  case '|':
     gen_bitwise(node);
     break;
   default:
