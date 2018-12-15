@@ -177,6 +177,8 @@ Vector *tokenize() {
       tok = new_token(s, switch2(s, '=', TK_EQ));
     } else if (ch == '&') {
       tok = new_token(s, switch3(s, '&', TK_BAND_EQ, TK_AND));
+    } else if (ch == '|') {
+      tok = new_token(s, switch3(s, '|', TK_BOR_EQ, TK_OR));
     } else if (ch == '<') {
       tok = new_token(s, switch4(s, '<', TK_LEQ, TK_SHL, TK_SHL_EQ));
     } else if (ch == '>') {

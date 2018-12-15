@@ -237,7 +237,12 @@ static Node *logical_and_expr() {
   return lhs;
 }
 
-static Node *logical_or_expr() { return logical_and_expr(); }
+static Node *logical_or_expr() {
+  Node *lhs = logical_and_expr();
+  if (consume(TK_OR))
+    return new_node(ND_OR, lhs, logical_or_expr());
+  return lhs;
+}
 
 static Node *conditional_expr() { return logical_or_expr(); }
 

@@ -90,16 +90,29 @@ static void gen_logical(Node *node) {
   char *false_label = bb_label();
   char *last_label = bb_label();
 
-  gen(node->lhs);
-  gen(node->rhs);
-  emit("pop rdi");
-  emit("pop rax");
+  // If the first operand compares equal to 0,
+  // the second operand is not evaluated.
   switch (node->ty) {
   case ND_AND:
+    gen(node->lhs);
+    emit("pop rax");
     emit("cmp rax, 0");
     emit("je %s", false_label);
-    emit("cmp rdi, 0");
+    gen(node->rhs);
+    emit("pop rax");
+    emit("cmp rax, 0");
     emit("je %s", false_label);
+    break;
+  case ND_OR:
+    gen(node->lhs);
+    emit("pop rax");
+    emit("cmp rax, 0");
+    emit("jne %s", true_label);
+    gen(node->rhs);
+    emit("pop rax");
+    emit("cmp rax, 0");
+    emit("jne %s", true_label);
+    emit("jmp %s", false_label);
     break;
   default:
     error("Unknown operator %d", node->ty);
@@ -367,6 +380,7 @@ static void gen(Node *node) {
     gen_shift(node);
     break;
   case ND_AND:
+  case ND_OR:
     gen_logical(node);
     break;
   default:

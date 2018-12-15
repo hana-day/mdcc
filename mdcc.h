@@ -43,6 +43,8 @@ enum {
   TK_LEQ,     // <=
   TK_AND,     // &&
   TK_BAND_EQ, // &=
+  TK_OR,      // ||
+  TK_BOR_EQ,  // |=
   TK_EOF,
 };
 
@@ -64,6 +66,7 @@ enum {
   ND_SHL,
   ND_SHR,
   ND_AND,
+  ND_OR,
   ND_WHILE,
 };
 

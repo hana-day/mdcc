@@ -75,4 +75,6 @@ test_ 4 "int main() { int a = 1; a <<= 2; return a; }"
 test_ 1 "int main() { int a = 4; a >>= 2; return a; }"
 test_ 1 "int main() { return 2 && 3; }"
 test_ 0 "int main() { return 2 && 0; }"
+test_ 1 "int main() { return 2 || 0; }"
+test_ 0 "int main() { return 0 || 0; }"
 echo OK
