@@ -106,6 +106,20 @@ static int switch2(Scanner *s, int tok0, int tok1) {
   return tok0;
 }
 
+static int switch3(Scanner *s, int tok0, int tok1, int tok2) {
+  char ch = s->ch;
+  next(s);
+  if (s->ch == '=') {
+    next(s);
+    return tok1;
+  }
+  if (s->ch == ch) {
+    next(s);
+    return tok2;
+  }
+  return tok0;
+}
+
 static int switch4(Scanner *s, int tok0, int tok1, int tok2, int tok3) {
   char ch = s->ch;
   next(s);
@@ -161,6 +175,8 @@ Vector *tokenize() {
       tok = new_token(s, switch2(s, '!', TK_NEQ));
     } else if (ch == '=') {
       tok = new_token(s, switch2(s, '=', TK_EQ));
+    } else if (ch == '&') {
+      tok = new_token(s, switch3(s, '&', TK_BAND_EQ, TK_AND));
     } else if (ch == '<') {
       tok = new_token(s, switch4(s, '<', TK_LEQ, TK_SHL, TK_SHL_EQ));
     } else if (ch == '>') {

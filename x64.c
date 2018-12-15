@@ -85,6 +85,33 @@ static void gen_cmp(Node *node) {
   emit_label(last_label);
 }
 
+static void gen_logical(Node *node) {
+  char *true_label = bb_label();
+  char *false_label = bb_label();
+  char *last_label = bb_label();
+
+  gen(node->lhs);
+  gen(node->rhs);
+  emit("pop rdi");
+  emit("pop rax");
+  switch (node->ty) {
+  case ND_AND:
+    emit("cmp rax, 0");
+    emit("je %s", false_label);
+    emit("cmp rdi, 0");
+    emit("je %s", false_label);
+    break;
+  default:
+    error("Unknown operator %d", node->ty);
+  }
+  emit_label(true_label);
+  emit("push 1");
+  emit("jmp %s", last_label);
+  emit_label(false_label);
+  emit("push 0");
+  emit_label(last_label);
+}
+
 static void gen_shift(Node *node) {
   gen(node->lhs);
   gen(node->rhs);
@@ -338,6 +365,9 @@ static void gen(Node *node) {
   case ND_SHL:
   case ND_SHR:
     gen_shift(node);
+    break;
+  case ND_AND:
+    gen_logical(node);
     break;
   default:
     error("Unknown node type %d", node->ty);

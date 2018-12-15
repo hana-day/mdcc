@@ -230,7 +230,12 @@ static Node *exclusive_or_expr() { return and_expr(); }
 
 static Node *inclusive_or_expr() { return exclusive_or_expr(); }
 
-static Node *logical_and_expr() { return inclusive_or_expr(); }
+static Node *logical_and_expr() {
+  Node *lhs = inclusive_or_expr();
+  if (consume(TK_AND))
+    return new_node(ND_AND, lhs, logical_and_expr());
+  return lhs;
+}
 
 static Node *logical_or_expr() { return logical_and_expr(); }
 

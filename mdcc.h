@@ -33,14 +33,16 @@ enum {
   TK_WHILE,
   TK_SHL,
   TK_SHR,
-  TK_ADD_EQ, // +=
-  TK_SUB_EQ, // -=
-  TK_MUL_EQ, // *=
-  TK_DIV_EQ, // /=
-  TK_SHL_EQ, // <<=
-  TK_SHR_EQ, // >>=
-  TK_GEQ,    // >=
-  TK_LEQ,    // <=
+  TK_ADD_EQ,  // +=
+  TK_SUB_EQ,  // -=
+  TK_MUL_EQ,  // *=
+  TK_DIV_EQ,  // /=
+  TK_SHL_EQ,  // <<=
+  TK_SHR_EQ,  // >>=
+  TK_GEQ,     // >=
+  TK_LEQ,     // <=
+  TK_AND,     // &&
+  TK_BAND_EQ, // &=
   TK_EOF,
 };
 
@@ -61,6 +63,7 @@ enum {
   ND_FOR,
   ND_SHL,
   ND_SHR,
+  ND_AND,
   ND_WHILE,
 };
 
