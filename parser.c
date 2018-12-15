@@ -168,6 +168,8 @@ static Node *assignment_expr() {
     return new_node('=', lhs, new_node(ND_SHL, lhs, assignment_expr()));
   } else if (consume(TK_SHR_EQ)) {
     return new_node('=', lhs, new_node(ND_SHR, lhs, assignment_expr()));
+  } else if (consume(TK_BAND_EQ)) {
+    return new_node('=', lhs, new_node('&', lhs, assignment_expr()));
   } else {
     pos = prev_pos;
     return conditional_expr();
@@ -224,7 +226,12 @@ static Node *equality_expr() {
     return lhs;
 }
 
-static Node *and_expr() { return equality_expr(); }
+static Node *and_expr() {
+  Node *lhs = equality_expr();
+  if (consume('&'))
+    return new_node('&', lhs, and_expr());
+  return lhs;
+}
 
 static Node *exclusive_or_expr() { return and_expr(); }
 

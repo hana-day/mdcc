@@ -125,6 +125,21 @@ static void gen_logical(Node *node) {
   emit_label(last_label);
 }
 
+static void gen_bitwise(Node *node) {
+  gen(node->lhs);
+  gen(node->rhs);
+  emit("pop rdi");
+  emit("pop rax");
+  switch (node->ty) {
+  case '&':
+    emit("and rax, rdi");
+    break;
+  default:
+    error("Unknown operator %d", node->ty);
+  }
+  emit("push rax");
+}
+
 static void gen_shift(Node *node) {
   gen(node->lhs);
   gen(node->rhs);
@@ -382,6 +397,9 @@ static void gen(Node *node) {
   case ND_AND:
   case ND_OR:
     gen_logical(node);
+    break;
+  case '&':
+    gen_bitwise(node);
     break;
   default:
     error("Unknown node type %d", node->ty);

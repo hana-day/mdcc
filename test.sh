@@ -77,4 +77,6 @@ test_ 1 "int main() { return 2 && 3; }"
 test_ 0 "int main() { return 2 && 0; }"
 test_ 1 "int main() { return 2 || 0; }"
 test_ 0 "int main() { return 0 || 0; }"
+test_ 4 "int main() { return 7 & 4; }"
+test_ 4 "int main() { int a = 7; a &= 4; return a; }"
 echo OK
