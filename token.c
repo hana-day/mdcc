@@ -166,7 +166,7 @@ Vector *tokenize() {
     } else if (ch == '+') {
       tok = new_token(s, switch3(s, '+', TK_ADD_EQ, TK_INC));
     } else if (ch == '-') {
-      tok = new_token(s, switch2(s, '-', TK_SUB_EQ));
+      tok = new_token(s, switch3(s, '-', TK_SUB_EQ, TK_DEC));
     } else if (ch == '*') {
       tok = new_token(s, switch2(s, '*', TK_MUL_EQ));
     } else if (ch == '/') {

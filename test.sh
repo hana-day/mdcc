@@ -84,4 +84,5 @@ test_ 7 "int main() { int a = 2; a |= 5; return a; }"
 test_ 3 "int main() { return 6 ^ 5; }";
 test_ 3 "int main() { int a = 6; a ^= 5; return a; }";
 test_ 2 "int main() { int a = 1; int b = ++a; return b; }"
+test_ 1 "int main() { int a = 2; int b = --a; return b; }"
 echo OK

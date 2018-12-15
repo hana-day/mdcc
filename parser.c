@@ -142,6 +142,10 @@ static Node *unary_expr() {
     Node *lhs = unary_expr();
     return new_node('=', lhs, new_node('+', lhs, new_node_num(1)));
   }
+  if (consume(TK_DEC)) {
+    Node *lhs = unary_expr();
+    return new_node('=', lhs, new_node('-', lhs, new_node_num(1)));
+  }
   return postfix_expr();
 }
 

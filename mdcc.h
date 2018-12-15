@@ -36,6 +36,7 @@ enum {
   TK_ADD_EQ,  // +=
   TK_INC,     // ++
   TK_SUB_EQ,  // -=
+  TK_DEC,     // --
   TK_MUL_EQ,  // *=
   TK_DIV_EQ,  // /=
   TK_SHL_EQ,  // <<=
