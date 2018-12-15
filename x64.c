@@ -181,6 +181,18 @@ static void gen_lval(Node *node) {
   error("Invalid lvalue.");
 }
 
+static void gen_postfix_incdec(Node *node) {
+  gen_lval(node->rhs);
+  gen(node->rhs);
+  emit("pop rdi");
+  // Save the value before postfix inc/dec into the register.
+  emit("mov rcx, rdi");
+  emit("add rdi, 1");
+  emit("pop rax");
+  emit("mov [rax], rdi");
+  emit("push rcx");
+}
+
 static void assign(Node *lhs, Node *rhs) {
   gen_lval(lhs);
   gen(rhs);
@@ -408,6 +420,9 @@ static void gen(Node *node) {
   case '|':
   case '^':
     gen_bitwise(node);
+    break;
+  case ND_INC:
+    gen_postfix_incdec(node);
     break;
   default:
     error("Unknown node type %d", node->ty);

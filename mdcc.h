@@ -70,6 +70,8 @@ enum {
   ND_SHR,
   ND_AND,
   ND_OR,
+  ND_INC, // postfix increment
+  ND_DEC, // postfix decrement
   ND_WHILE,
 };
 
