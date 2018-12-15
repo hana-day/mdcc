@@ -81,4 +81,6 @@ test_ 4 "int main() { return 7 & 4; }"
 test_ 4 "int main() { int a = 7; a &= 4; return a; }"
 test_ 7 "int main() { return 2 | 5; }"
 test_ 7 "int main() { int a = 2; a |= 5; return a; }"
+test_ 3 "int main() { return 6 ^ 5; }";
+test_ 3 "int main() { int a = 6; a ^= 5; return a; }";
 echo OK

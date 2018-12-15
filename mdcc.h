@@ -45,6 +45,7 @@ enum {
   TK_BAND_EQ, // &=
   TK_OR,      // ||
   TK_BOR_EQ,  // |=
+  TK_XOR_EQ,  // ^=
   TK_EOF,
 };
 

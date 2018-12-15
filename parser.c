@@ -172,6 +172,8 @@ static Node *assignment_expr() {
     return new_node('=', lhs, new_node('&', lhs, assignment_expr()));
   } else if (consume(TK_BOR_EQ)) {
     return new_node('=', lhs, new_node('|', lhs, assignment_expr()));
+  } else if (consume(TK_XOR_EQ)) {
+    return new_node('=', lhs, new_node('^', lhs, assignment_expr()));
   } else {
     pos = prev_pos;
     return conditional_expr();
@@ -235,7 +237,12 @@ static Node *and_expr() {
   return lhs;
 }
 
-static Node *exclusive_or_expr() { return and_expr(); }
+static Node *exclusive_or_expr() {
+  Node *lhs = and_expr();
+  if (consume('^'))
+    return new_node('^', lhs, exclusive_or_expr());
+  return lhs;
+}
 
 static Node *inclusive_or_expr() {
   Node *lhs = exclusive_or_expr();

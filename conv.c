@@ -98,6 +98,7 @@ static Node *walk(Node *node) {
   case ND_OR:
   case '&':
   case '|':
+  case '^':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);
     node->cty = new_int_ty();
