@@ -123,12 +123,12 @@ static Node *postfix_expr() {
     if (consume('[')) {
       arrmode = true;
       Node *node = new_node('-', lhs, expr());
-      lhs = new_node(ND_DEREF, new_node_null(), node);
+      lhs = new_node_one(ND_DEREF, node);
       expect(']');
     } else if (consume(TK_INC)) {
-      lhs = new_node(ND_INC, new_node_null(), lhs);
+      lhs = new_node_one(ND_INC, lhs);
     } else if (consume(TK_DEC)) {
-      lhs = new_node(ND_DEC, new_node_null(), lhs);
+      lhs = new_node_one(ND_DEC, lhs);
     } else {
       return lhs;
     }
@@ -139,9 +139,9 @@ static Node *cast_expr();
 
 static Node *unary_expr() {
   if (consume('&'))
-    return new_node(ND_ADDR, new_node_null(), cast_expr());
+    return new_node_one(ND_ADDR, cast_expr());
   if (consume('*'))
-    return new_node(ND_DEREF, new_node_null(), cast_expr());
+    return new_node_one(ND_DEREF, cast_expr());
   if (consume(TK_INC)) {
     Node *lhs = unary_expr();
     return new_node('=', lhs, new_node('+', lhs, new_node_num(1)));

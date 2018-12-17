@@ -3,7 +3,7 @@
 static Node *arr_to_ptr(Node *node) {
   if (node->cty->ty != TY_ARR)
     return node;
-  Node *node2 = new_node(ND_ADDR, new_node_null(), node);
+  Node *node2 = new_node_one(ND_ADDR, node);
   node2->cty = ptr(node->cty->arr_of);
   return node2;
 }
@@ -29,14 +29,14 @@ static Node *walk(Node *node) {
       node->args->data[i] = walk(node->args->data[i]);
     return node;
   case ND_ADDR:
-    node->rhs = walk(node->rhs);
-    node->cty = ptr(node->rhs->cty);
+    node->expr = walk(node->expr);
+    node->cty = ptr(node->expr->cty);
     return node;
   case ND_DEREF:
-    node->rhs = walk(node->rhs);
-    if (node->rhs->cty->ty != TY_PTR)
+    node->expr = walk(node->expr);
+    if (node->expr->cty->ty != TY_PTR)
       error("operand for dereference must be a pointer");
-    node->cty = node->rhs->cty->ptr_to;
+    node->cty = node->expr->cty->ptr_to;
     return arr_to_ptr(node);
   case ND_ROOT:
     for (int i = 0; i < node->funcs->len; i++) {
@@ -101,8 +101,7 @@ static Node *walk(Node *node) {
   case '^':
   case ND_INC:
   case ND_DEC:
-    node->lhs = walk(node->lhs);
-    node->rhs = walk(node->rhs);
+    node->expr = walk(node->expr);
     node->cty = new_int_ty();
     return node;
   }

@@ -192,6 +192,7 @@ int roundup(int x, int align);
 Type *new_type(int ty, int size);
 Type *ptr(Type *ty);
 Node *new_node(int ty, Node *lhs, Node *rhs);
+Node *new_node_one(int ty, Node *expr);
 Type *new_int_ty();
 Node *new_node_num(int val);
 Node *new_node_null();

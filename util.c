@@ -96,6 +96,13 @@ Node *new_node(int ty, Node *lhs, Node *rhs) {
   return node;
 }
 
+Node *new_node_one(int ty, Node *expr) {
+  Node *node = malloc(sizeof(Node));
+  node->ty = ty;
+  node->expr = expr;
+  return node;
+}
+
 Type *new_int_ty() { return new_type(TY_INT, 8); }
 
 Node *new_node_num(int val) {

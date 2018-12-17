@@ -164,7 +164,7 @@ static void gen_shift(Node *node) {
 
 static void gen_lval(Node *node) {
   if (node->ty == ND_DEREF) {
-    gen(node->rhs);
+    gen(node->expr);
     return;
   }
   if (node->ty == ND_IDENT) {
@@ -182,8 +182,8 @@ static void gen_lval(Node *node) {
 }
 
 static void gen_postfix_incdec(Node *node) {
-  gen_lval(node->rhs);
-  gen(node->rhs);
+  gen_lval(node->expr);
+  gen(node->expr);
   emit("pop rdi");
   // Save the value before postfix inc/dec into the register.
   emit("mov rcx, rdi");
@@ -333,10 +333,10 @@ static void gen(Node *node) {
     emit("push rax");
     break;
   case ND_ADDR:
-    gen_lval(node->rhs);
+    gen_lval(node->expr);
     break;
   case ND_DEREF:
-    gen(node->rhs);
+    gen(node->expr);
     emit("pop rax");
     emit("mov rax, [rax]");
     emit("push rax");
