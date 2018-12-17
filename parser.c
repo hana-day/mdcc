@@ -8,6 +8,7 @@ typedef struct Scope {
 Vector *tokens;
 Scope *scope;
 Vector *func_vars;
+static Node node_null = {ND_NULL};
 
 inline static Token *peek(int p) { return tokens->data[p]; }
 
@@ -113,7 +114,7 @@ static Node *primary_expr() {
     pos++;
     return node;
   }
-  return new_node_null();
+  return &node_null;
 }
 
 static Node *postfix_expr() {
@@ -283,7 +284,7 @@ static Node *expr() { return assignment_expr(); }
 
 static Node *expr_stmt() {
   if (consume(';'))
-    return new_node_null();
+    return &node_null;
   Node *e = expr();
   expect(';');
   return e;
@@ -393,14 +394,14 @@ static Node *init_declr(Type *ty) {
     Node *rhs = expr();
     return new_node('=', lhs, rhs);
   } else {
-    return new_node_null();
+    return &node_null;
   }
 }
 
 static void *decl() {
   Type *ty = decl_specifier();
   if (consume(';'))
-    return new_node_null();
+    return &node_null;
   Node *node = init_declr(ty);
   expect(';');
   return node;
@@ -454,7 +455,7 @@ static Node *iter_stmt() {
     node->body = stmt();
     return node;
   }
-  return new_node_null();
+  return &node_null;
 }
 
 static Node *stmt() {

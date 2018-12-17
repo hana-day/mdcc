@@ -112,9 +112,3 @@ Node *new_node_num(int val) {
   node->cty = new_int_ty();
   return node;
 }
-
-Node *new_node_null() {
-  Node *node = malloc(sizeof(Node));
-  node->ty = ND_NULL;
-  return node;
-}
