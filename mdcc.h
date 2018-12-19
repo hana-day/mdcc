@@ -1,6 +1,7 @@
 #ifndef __MDCC_H__
 #define __MDCC_H__
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -21,6 +22,7 @@ typedef struct {
 
 enum {
   TK_NUM = 256,
+  TK_LONG,
   TK_INT,
   TK_CHAR,
   TK_IDENT,
@@ -91,6 +93,7 @@ typedef struct {
 enum {
   TY_INT = 1,
   TY_CHAR,
+  TY_LONG,
   TY_PTR,
   TY_ARR,
 };
@@ -193,6 +196,7 @@ Type *new_type(int ty, int size);
 Type *ptr(Type *ty);
 Node *new_node(int ty, Node *lhs, Node *rhs);
 Node *new_node_one(int ty, Node *expr);
+Type *new_long_ty();
 Type *new_int_ty();
 Type *new_char_ty();
 Node *new_node_num(int val);

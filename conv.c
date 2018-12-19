@@ -39,8 +39,14 @@ static Node *walk(Node *node) {
   case ND_IDENT:
     return arr_to_ptr(node);
   case ND_FUNC:
-    for (int i = 0; i < node->params->len; i++)
-      node->params->data[i] = walk(node->params->data[i]);
+    // node->params is skipped.
+    for (int i = 0; i < node->params->len; i++) {
+      Node *param = node->params->data[i];
+      if (param->cty->ty == TY_ARR)
+        param->var->has_address = true;
+      node->params->data[i] = param;
+    }
+    node->body = walk(node->body);
     node->cty = new_int_ty();
     return node;
   case ND_CALL:
@@ -59,13 +65,9 @@ static Node *walk(Node *node) {
     node->cty = node->expr->cty->ptr_to;
     return arr_to_ptr(node);
   case ND_ROOT:
-    for (int i = 0; i < node->funcs->len; i++) {
-      Node *func = node->funcs->data[i];
-      func->body = walk(func->body);
-      node->funcs->data[i] = (void *)func;
-    }
+    for (int i = 0; i < node->funcs->len; i++)
+      node->funcs->data[i] = walk(node->funcs->data[i]);
     return node;
-    break;
   case ND_RETURN:
     node->expr = walk(node->expr);
     return node;

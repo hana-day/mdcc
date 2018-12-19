@@ -55,8 +55,8 @@ static char *bb_label() { return format("MDCC_BB_%d", nlabel++); }
 static void emit_directive(char *s) { printf(".%s\n", s); }
 
 static void emit_conv_to_full(int r, int size) {
-  if (size != 8)
-    emit("%movzx %s, %s", reg(r, 8), reg(r, size));
+  if (size != 8 && size != 4)
+    emit("movzx %s, %s", reg(r, 8), reg(r, size));
 }
 
 static void emit_push(int r, int size) {
@@ -229,14 +229,14 @@ static void gen_lval(Node *node) {
     emit("mov rax, rbp");
     emit("sub rax, %d", node->var->offset);
     emit("push rax");
-    if (node->cty->ty == TY_ARR && node->var->has_address) {
+    if (node->var->has_address) {
       emit("pop rax");
       emit("mov rax, [rax]");
       emit("push rax");
     }
     return;
   }
-  error("Invalid lvalue.");
+  error("Invalid lvalue %d.", node->ty);
 }
 
 static void gen_postfix_incdec(Node *node) {
@@ -276,13 +276,17 @@ static void assign(Node *node) {
   emit_push(RDI, sz);
 }
 
+static void gen_param_lval(Node *node) {
+  assert(node->ty == ND_IDENT);
+  emit("mov rax, rbp");
+  emit("sub rax, %d", node->var->offset);
+  emit("push rax");
+}
+
 static void load_args(Node *func) {
   for (int i = 0; i < func->params->len; i++) {
     Node *param = func->params->data[i];
-    gen_lval(param);
-    if (param->cty->ty == TY_PTR || param->cty->ty == TY_ARR) {
-      param->var->has_address = true;
-    }
+    gen_param_lval(param);
     switch (i) {
     case 0:
       emit("push rdi");
@@ -305,10 +309,15 @@ static void load_args(Node *func) {
     default:
       error("Too many parameters");
     }
+    int sz;
+    if (param->var->has_address)
+      sz = 8;
+    else
+      sz = param->cty->size;
     emit("pop rdi");
     emit("pop rax");
-    emit("mov [rax], rdi");
-    emit("push rdi");
+    emit("mov [rax], %s", reg(RDI, sz));
+    emit_push(RDI, sz);
   }
 }
 
@@ -354,12 +363,16 @@ static void emit_prologue(Node *func) {
   emit("push rbp");
   emit("mov rbp, rsp");
   int off = 0; // Offset from rbp
-  off += 8;
   for (int i = 0; i < func->func_vars->len; i++) {
     Var *var = func->func_vars->data[i];
+    if (var->has_address) {
+      off += 8;
+      off = roundup(off, 8);
+    } else {
+      off += var->ty->size;
+      off = roundup(off, var->ty->align);
+    }
     var->offset = off;
-    off += var->ty->size;
-    off = roundup(off, var->ty->align);
   }
   emit("sub rsp, %d", roundup(off, 16));
   load_args(func);

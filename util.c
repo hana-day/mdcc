@@ -103,9 +103,11 @@ Node *new_node_one(int ty, Node *expr) {
   return node;
 }
 
-Type *new_int_ty() { return new_type(TY_INT, 8); }
+Type *new_long_ty() { return new_type(TY_LONG, 8); }
 
-Type *new_char_ty() { return new_type(TY_INT, 1); }
+Type *new_int_ty() { return new_type(TY_INT, 4); }
+
+Type *new_char_ty() { return new_type(TY_CHAR, 1); }
 
 Node *new_node_num(int val) {
   Node *node = malloc(sizeof(Node));
