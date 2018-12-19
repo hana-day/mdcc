@@ -89,4 +89,6 @@ test_ 3 "int main() { int a = 1; int b = a++; return a+b; }"
 test_ 3 "int main() { int a = 1; int b = a++; return a+b; }"
 test_ 3 "int main() { int a = 1; int b = 1; a = a++ + ++b; return a; }"
 test_ 3 "int main() { int a = 2; int b = a--; return a+b; }"
+test_ 1 "int main() { int a = 255; a += 2; return a == 257; }"
+test_ 1 "int main() { char a = 255; a += 2; return a == 1; }"
 echo OK

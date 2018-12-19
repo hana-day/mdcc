@@ -194,6 +194,7 @@ Type *ptr(Type *ty);
 Node *new_node(int ty, Node *lhs, Node *rhs);
 Node *new_node_one(int ty, Node *expr);
 Type *new_int_ty();
+Type *new_char_ty();
 Node *new_node_num(int val);
 
 // token.c

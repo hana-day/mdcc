@@ -8,6 +8,13 @@ static Node *arr_to_ptr(Node *node) {
   return node2;
 }
 
+static Type *implicit_conv(Node *lhs, Node *rhs) {
+  if (lhs->cty->size > rhs->cty->size)
+    return lhs->cty;
+  else
+    return rhs->cty;
+}
+
 static Node *walk(Node *node) {
   if (node == NULL)
     return NULL;
@@ -27,6 +34,7 @@ static Node *walk(Node *node) {
   case ND_CALL:
     for (int i = 0; i < node->args->len; i++)
       node->args->data[i] = walk(node->args->data[i]);
+    node->cty = new_int_ty();
     return node;
   case ND_ADDR:
     node->expr = walk(node->expr);
@@ -64,31 +72,16 @@ static Node *walk(Node *node) {
     node->cond = walk(node->cond);
     node->body = walk(node->body);
     return node;
-  case ND_EQ:
-  case ND_NEQ:
-  case '<':
-  case '>':
   case '=':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);
     node->cty = node->lhs->cty;
     return node;
+  case ND_EQ:
+  case ND_NEQ:
+  case '<':
+  case '>':
   case '+':
-    node->lhs = walk(node->lhs);
-    node->rhs = walk(node->rhs);
-    node->cty = new_int_ty();
-    return node;
-  case '-':
-    node->lhs = walk(node->lhs);
-    node->rhs = walk(node->rhs);
-    if (node->lhs->cty->ty == TY_PTR) {
-      node->rhs =
-          new_node('*', node->rhs, new_node_num(node->lhs->cty->ptr_to->size));
-      node->cty = node->lhs->cty;
-    } else {
-      node->cty = new_int_ty();
-    }
-    return node;
   case '*':
   case '/':
   case '%':
@@ -99,10 +92,26 @@ static Node *walk(Node *node) {
   case '&':
   case '|':
   case '^':
+    node->lhs = walk(node->lhs);
+    node->rhs = walk(node->rhs);
+    node->cty = implicit_conv(node->lhs, node->rhs);
+    return node;
+  case '-':
+    node->lhs = walk(node->lhs);
+    node->rhs = walk(node->rhs);
+    if (node->lhs->cty->ty == TY_PTR) {
+      node->rhs =
+          new_node('*', node->rhs, new_node_num(node->lhs->cty->ptr_to->size));
+      node->rhs->cty = implicit_conv(node->rhs->lhs, node->rhs->rhs);
+      node->cty = node->lhs->cty;
+    } else {
+      node->cty = implicit_conv(node->lhs, node->rhs);
+    }
+    return node;
   case ND_INC:
   case ND_DEC:
     node->expr = walk(node->expr);
-    node->cty = new_int_ty();
+    node->cty = node->expr->cty;
     return node;
   }
   return NULL;

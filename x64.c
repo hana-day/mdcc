@@ -2,6 +2,43 @@
 
 static int nlabel = 1;
 
+enum {
+  RAX = 0,
+  RDI,
+  RSI,
+  RDX,
+  RCX,
+  R8,
+  R9,
+  R10,
+  R11,
+  RBP,
+  RSP,
+  RBX,
+  R12,
+  R13,
+  R14,
+  R15,
+};
+
+char *regs64[] = {"rax", "rdi", "rsi", "rdx", "rcx", "r8",  "r9",  "r10",
+                  "r11", "rbp", "rsp", "rbx", "r12", "r13", "r14", "r15"};
+char *regs32[] = {"eax",  "edi", "esi", "edx", "ecx",  "r8d",  "r9d",  "r10d",
+                  "r11d", "ebp", "esp", "ebx", "r12d", "r13d", "r14d", "r15d"};
+char *regs8[] = {"al",   "dil", "sil", "dl", "cl",   "r8b",  "r9b",  "r10b",
+                 "r11b", "bpl", "spl", "bl", "r12b", "r13b", "r14b", "r15b"};
+
+static char *reg(int r, int size) {
+  if (size == 1)
+    return regs8[r];
+  else if (size == 4)
+    return regs32[r];
+  else if (size == 8)
+    return regs64[r];
+  else
+    error("Unsupported register size %d", size);
+}
+
 static void emit(char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
@@ -17,41 +54,56 @@ static char *bb_label() { return format("MDCC_BB_%d", nlabel++); }
 
 static void emit_directive(char *s) { printf(".%s\n", s); }
 
+static void emit_conv_to_full(int r, int size) {
+  if (size != 8)
+    emit("%movzx %s, %s", reg(r, 8), reg(r, size));
+}
+
+static void emit_push(int r, int size) {
+  emit_conv_to_full(r, size);
+  emit("push %s", reg(r, 8));
+}
+
 static void gen(Node *node);
 
 static void gen_binary(Node *node) {
   gen(node->lhs);
   gen(node->rhs);
 
+  int sz = node->cty->size;
+  char *rdi = reg(RDI, sz);
+  char *rax = reg(RAX, sz);
+  char *rdx = reg(RDX, sz);
+
   emit("pop rdi");
   emit("pop rax");
 
   switch (node->ty) {
   case '+':
-    emit("add rax, rdi");
+    emit("add %s, %s", rax, rdi);
     break;
   case '-':
-    emit("sub rax, rdi");
+    emit("sub %s, %s", rax, rdi);
     break;
   case '*':
-    emit("imul rax, rdi");
+    emit("imul %s, %s", rax, rdi);
     break;
   case '/':
-    emit("mov rdx, 0");
-    emit("div rdi");
+    emit("mov %s, 0", rdx);
+    emit("div %s", rdi);
     break;
   case '%':
-    emit("mov rdx, 0");
-    emit("div rdi");
-    emit("mov rax, rdx");
+    emit("mov %s, 0", rdx);
+    emit("div %s", rdi);
+    emit("mov %s, %s", rax, rdx);
     break;
   case ND_SHL:
-    emit("shl rax, rdi");
+    emit("shl %s, %s", rax, rdi);
     break;
   default:
     error("Unknown binary operator %d", node->ty);
   }
-  emit("push rax");
+  emit_push(RAX, sz);
 }
 
 static void gen_cmp(Node *node) {
@@ -202,14 +254,16 @@ static void gen_postfix_incdec(Node *node) {
   emit("push rcx");
 }
 
-static void assign(Node *lhs, Node *rhs) {
-  gen_lval(lhs);
-  gen(rhs);
+static void assign(Node *node) {
+  gen_lval(node->lhs);
+  gen(node->rhs);
 
   emit("pop rdi");
   emit("pop rax");
-  emit("mov [rax], rdi");
-  emit("push rdi");
+
+  int sz = node->cty->size;
+  emit("mov [rax], %s", reg(RDI, sz));
+  emit_push(RDI, sz);
 }
 
 static void load_args(Node *func) {
@@ -251,8 +305,9 @@ static void load_args(Node *func) {
 static void gen_ident(Node *node) {
   gen_lval(node);
   emit("pop rax");
-  emit("mov rax, [rax]");
-  emit("push rax");
+  int sz = node->cty->size;
+  emit("mov %s, [rax]", reg(RAX, sz));
+  emit_push(RAX, sz);
 }
 
 static void store_args(Node *node) {
@@ -408,7 +463,7 @@ static void gen(Node *node) {
     gen_cmp(node);
     break;
   case '=':
-    assign(node->lhs, node->rhs);
+    assign(node);
     break;
   case '+':
   case '-':

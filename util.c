@@ -105,6 +105,8 @@ Node *new_node_one(int ty, Node *expr) {
 
 Type *new_int_ty() { return new_type(TY_INT, 8); }
 
+Type *new_char_ty() { return new_type(TY_INT, 1); }
+
 Node *new_node_num(int val) {
   Node *node = malloc(sizeof(Node));
   node->ty = ND_NUM;

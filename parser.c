@@ -12,7 +12,9 @@ static Node node_null = {ND_NULL};
 
 inline static Token *peek(int p) { return tokens->data[p]; }
 
-static bool istypename() { return peek(pos)->ty == TK_INT; }
+static bool istypename() {
+  return peek(pos)->ty == TK_INT || peek(pos)->ty == TK_CHAR;
+}
 
 static Scope *new_scope(Scope *outer) {
   Scope *scope = malloc(sizeof(Scope));
@@ -291,9 +293,10 @@ static Node *expr_stmt() {
 }
 
 static Type *decl_specifier() {
-  if (consume(TK_INT)) {
+  if (consume(TK_INT))
     return new_int_ty();
-  }
+  if (consume(TK_CHAR))
+    return new_char_ty();
   bad_token(peek(pos),
             format("Unknown declaration specifier %d", peek(pos)->val));
 }
