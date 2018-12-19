@@ -113,7 +113,8 @@ static void gen_cmp(Node *node) {
   gen(node->rhs);
   emit("pop rdi");
   emit("pop rax");
-  emit("cmp rax, rdi");
+  int sz = node->cty->size;
+  emit("cmp %s, %s", reg(RAX, sz), reg(RDI, sz));
   switch (node->ty) {
   case ND_EQ:
     emit("je %s", true_label);
@@ -182,20 +183,23 @@ static void gen_bitwise(Node *node) {
   gen(node->rhs);
   emit("pop rdi");
   emit("pop rax");
+  int sz = node->cty->size;
+  char *rax = reg(RAX, sz);
+  char *rdi = reg(RDI, sz);
   switch (node->ty) {
   case '&':
-    emit("and rax, rdi");
+    emit("and %s, %s", rax, rdi);
     break;
   case '|':
-    emit("or rax, rdi");
+    emit("or %s, %s", rax, rdi);
     break;
   case '^':
-    emit("xor rax, rdi");
+    emit("xor %s, %s", rax, rdi);
     break;
   default:
     error("Unknown operator %d", node->ty);
   }
-  emit("push rax");
+  emit_push(RAX, sz);
 }
 
 static void gen_shift(Node *node) {
@@ -203,15 +207,17 @@ static void gen_shift(Node *node) {
   gen(node->rhs);
   emit("pop rcx");
   emit("pop rax");
+  int sz = node->cty->size;
+  char *rax = reg(RAX, sz);
   switch (node->ty) {
   case ND_SHL:
-    emit("shl rax, cl");
+    emit("shl %s, cl", rax);
     break;
   case ND_SHR:
-    emit("shr rax, cl");
+    emit("shr %s, cl", rax);
     break;
   }
-  emit("push rax");
+  emit_push(RAX, sz);
 }
 
 static void gen_lval(Node *node) {
@@ -239,18 +245,22 @@ static void gen_postfix_incdec(Node *node) {
   emit("pop rdi");
   // Save the value before postfix inc/dec into the register.
   emit("mov rcx, rdi");
+
+  int sz = node->cty->size;
+  char *rdi = reg(RDI, sz);
+
   switch (node->ty) {
   case ND_INC:
-    emit("add rdi, 1");
+    emit("add %s, 1", rdi);
     break;
   case ND_DEC:
-    emit("sub rdi, 1");
+    emit("sub %s, 1", rdi);
     break;
   default:
     error("Unknown node type %d", node->ty);
   }
   emit("pop rax");
-  emit("mov [rax], rdi");
+  emit("mov [rax], %s", rdi);
   emit("push rcx");
 }
 
