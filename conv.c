@@ -9,6 +9,13 @@ static Node *arr_to_ptr(Node *node) {
 }
 
 static Type *implicit_conv(Node *lhs, Node *rhs) {
+  // When lhs or rhs is a number, use the type of another.
+  // (e.g., a+2 => return type of a).
+  if (lhs->ty == ND_NUM)
+    return rhs->cty;
+  if (rhs->ty == ND_NUM)
+    return lhs->cty;
+
   if (lhs->cty->size > rhs->cty->size)
     return lhs->cty;
   else
@@ -31,6 +38,11 @@ static Node *walk(Node *node) {
     return node;
   case ND_IDENT:
     return arr_to_ptr(node);
+  case ND_FUNC:
+    for (int i = 0; i < node->params->len; i++)
+      node->params->data[i] = walk(node->params->data[i]);
+    node->cty = new_int_ty();
+    return node;
   case ND_CALL:
     for (int i = 0; i < node->args->len; i++)
       node->args->data[i] = walk(node->args->data[i]);
