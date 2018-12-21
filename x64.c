@@ -42,7 +42,7 @@ static char *reg(int r, int size) {
 static void emit(char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
-  printf("  ");
+  printf("\t");
   vprintf(fmt, args);
   printf("\n");
   va_end(args);
