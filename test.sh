@@ -3,7 +3,7 @@
 test_() {
     expected="$1"
     input="$2"
-    ./mdcc "$input" > tmp.s
+    ./mdcc -e "$input" > tmp.s
     gcc -arch x86_64 -o tmp tmp.s
     ./tmp
     actual="$?"
