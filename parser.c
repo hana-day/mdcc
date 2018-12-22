@@ -126,7 +126,7 @@ static Node *postfix_expr() {
   while (1) {
     if (consume('[')) {
       arrmode = true;
-      Node *node = new_node('-', lhs, expr());
+      Node *node = new_node('+', lhs, expr());
       lhs = new_node_one(ND_DEREF, node);
       expect(']');
     } else if (consume(TK_INC)) {

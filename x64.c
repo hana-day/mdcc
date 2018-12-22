@@ -407,7 +407,8 @@ static void gen(Node *node) {
     break;
   case ND_CALL:
     store_args(node);
-    emit("call %s", node->name);
+    emit("mov al, 0");
+    emit("call _%s", node->name);
     emit("push rax");
     break;
   case ND_ADDR:
@@ -422,11 +423,7 @@ static void gen(Node *node) {
   case ND_ROOT:
     for (int i = 0; i < node->funcs->len; i++) {
       Node *func = node->funcs->data[i];
-      if (!strcmp(func->name, "main")) {
-        emit_label(format("_%s", "main"));
-      } else {
-        emit_label(func->name);
-      }
+      emit_label(format("_%s", func->name));
       emit_prologue(func);
       gen(func->body);
     }
