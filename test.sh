@@ -15,6 +15,7 @@ test_() {
     fi
 }
 NL=$'\n'
+
 test_ 1 "int main() { return 1;}"
 test_ 3 "int main() {return 1 + 2;}"
 test_ 6 "int main() { return 3 * 2;}"

@@ -33,10 +33,20 @@ static Var *lookup_var(char *name) {
   return NULL;
 }
 
+static Var *lookup_var_scope(char *name) {
+  Var *var = map_get(scope->vars, name);
+  if (var)
+    return var;
+  return NULL;
+}
+
 static Var *new_var(Type *ty, char *name) {
+  if (lookup_var_scope(name) != NULL)
+    error("Redeclaration of '%s'", name);
   Var *var = malloc(sizeof(Var));
   var->ty = ty;
   var->name = name;
+  var->has_address = false;
   map_set(scope->vars, name, (void *)var);
   vec_push(func_vars, (void *)var);
   return var;
@@ -552,7 +562,9 @@ static Node *root() {
   Node *node = new_node(ND_ROOT, NULL, NULL);
   node->funcs = new_vec();
   while (peek(pos)->ty != TK_EOF) {
+    scope = new_scope(scope);
     vec_push(node->funcs, func_def());
+    scope = scope->outer;
   }
   return node;
 }
