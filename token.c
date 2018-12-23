@@ -118,6 +118,14 @@ static void scan_block_comment(Scanner *s) {
   }
 }
 
+static void scan_line_comment(Scanner *s) {
+  while (s->ch != '\n') {
+    if (s->ch == -1)
+      return;
+    next(s);
+  }
+}
+
 static int switch2(Scanner *s, int tok0, int tok1) {
   next(s);
   if (s->ch == '=') {
@@ -193,7 +201,12 @@ Vector *tokenize() {
     } else if (ch == '/') {
       if (peek_next(s) == '*') {
         next(s);
+        next(s);
         scan_block_comment(s);
+      } else if (peek_next(s) == '/') {
+        next(s);
+        next(s);
+        scan_line_comment(s);
       } else {
         tok = new_token(s, switch2(s, '/', TK_DIV_EQ));
       }
