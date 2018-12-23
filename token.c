@@ -57,6 +57,12 @@ static void next(Scanner *s) {
   }
 }
 
+static char peek_next(Scanner *s) {
+  if (s->pos >= strlen(s->src) - 1)
+    return -1;
+  return s->src[s->pos + 1];
+}
+
 static void skipSpaces(Scanner *s) {
   while (s->ch == ' ' || s->ch == '\n' || s->ch == '\t' || s->ch == '\r')
     next(s);
@@ -97,6 +103,19 @@ static int scan_number(Scanner *s) {
     next(s);
   }
   return n;
+}
+
+static void scan_block_comment(Scanner *s) {
+  for (;;) {
+    if (s->ch == -1)
+      token_error(s, "unclosed comment");
+    if (s->ch == '*' && peek_next(s) == '/') {
+      next(s);
+      next(s);
+      return;
+    }
+    next(s);
+  }
 }
 
 static int switch2(Scanner *s, int tok0, int tok1) {
@@ -172,7 +191,12 @@ Vector *tokenize() {
     } else if (ch == '*') {
       tok = new_token(s, switch2(s, '*', TK_MUL_EQ));
     } else if (ch == '/') {
-      tok = new_token(s, switch2(s, '/', TK_DIV_EQ));
+      if (peek_next(s) == '*') {
+        next(s);
+        scan_block_comment(s);
+      } else {
+        tok = new_token(s, switch2(s, '/', TK_DIV_EQ));
+      }
     } else if (ch == '!') {
       tok = new_token(s, switch2(s, '!', TK_NEQ));
     } else if (ch == '=') {

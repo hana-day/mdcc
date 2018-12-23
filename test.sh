@@ -96,4 +96,5 @@ test_ 1 "int main() { char a = 255; a++; a++; return a == 1; }"
 test_ 1 "int f(char a) { return a+2; } int main() { return f(255) == 1; }"
 test_ 2 "int main() { char a = 1; char b = a + 1; return b;}"
 test_ 1 "int main() { char a = 1; char *b = &a; return *b; }"
+test_ 1 "int main() { int a = /** a =** 2;/* **/1; return a; }"
 echo OK
