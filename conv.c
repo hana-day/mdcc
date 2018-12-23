@@ -86,6 +86,10 @@ static Node *walk(Node *node) {
     node->cond = walk(node->cond);
     node->body = walk(node->body);
     return node;
+  case ND_INITS:
+    for (int i = 0; i < node->inits->len; i++)
+      node->inits->data[i] = walk(node->inits->data[i]);
+    return node;
   case '=':
     node->lhs = walk(node->lhs);
     node->rhs = walk(node->rhs);

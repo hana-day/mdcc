@@ -476,6 +476,15 @@ static void gen(Node *node) {
     emit_label(last_label);
     break;
   }
+  case ND_INITS:
+    if (node->var->ty->ty != TY_ARR)
+      error("Unsupported type for initialization %d", node->var->ty);
+    Node *init;
+    for (int i = 0; i < node->inits->len; i++) {
+      init = node->inits->data[i];
+      gen(init);
+    }
+    break;
   case ND_EQ:
   case ND_NEQ:
   case '<':

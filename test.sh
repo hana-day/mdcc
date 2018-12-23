@@ -15,7 +15,6 @@ test_() {
     fi
 }
 NL=$'\n'
-
 test_ 1 "int main() { return 1;}"
 test_ 3 "int main() {return 1 + 2;}"
 test_ 6 "int main() { return 3 * 2;}"
@@ -99,5 +98,7 @@ test_ 2 "int main() { char a = 1; char b = a + 1; return b;}"
 test_ 1 "int main() { char a = 1; char *b = &a; return *b; }"
 test_ 1 "int main() { int a = /** a =** 2;/* **/1; return a; }"
 test_ 1 "int main() { int a = 1; // a = 2;${NL} return a; }"
+test_ 6 "int main() { int a[3] = {1, 2, 3}; return a[0]+a[1]+a[2]; }"
+test_ 6 "int main() { int a[] = {1, 2, 3}; return a[0]+a[1]+a[2]; }"
 
 echo OK

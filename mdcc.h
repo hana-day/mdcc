@@ -77,6 +77,7 @@ enum {
   ND_INC, // postfix increment
   ND_DEC, // postfix decrement
   ND_WHILE,
+  ND_INITS,
 };
 
 typedef struct Position {
@@ -174,6 +175,9 @@ typedef struct Node {
 
   // For array reference
   Vector *indice;
+
+  // For initializer
+  Vector *inits;
 } Node;
 
 // Basic block

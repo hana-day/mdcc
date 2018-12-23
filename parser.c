@@ -66,7 +66,7 @@ static void expect(int ty) {
     pos++;
     return;
   }
-  bad_token(t, format("Expected token %d", ty));
+  bad_token(t, format("Expected token %d but got %d", ty, t->ty));
 }
 
 static Node *new_node_ident(char *name, Var *var) {
@@ -314,6 +314,13 @@ static Type *arr(Type *base, int len) {
   return ty;
 }
 
+static void resize_arr(Type *arr, int len) {
+  assert(arr->ty == TY_ARR);
+
+  arr->size = arr->arr_of->size * len;
+  arr->len = len;
+}
+
 static Node *declr(Type *ty);
 
 static Node *param_decl() {
@@ -393,12 +400,45 @@ static Node *declr(Type *ty) {
   return direct_declr(ty);
 }
 
+static Node *arr_elem_initr(Node *ident, int i) {
+  Node *node = new_node('+', ident, new_node_num(i));
+  Node *lhs = new_node_one(ND_DEREF, node);
+  Node *rhs = assignment_expr();
+  return new_node('=', lhs, rhs);
+}
+
+static Node *initr(Node *ident) {
+  Var *var = ident->var;
+  Vector *inits = new_vec();
+  if (consume('{')) {
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_INITS;
+    node->inits = inits;
+    node->var = var;
+
+    int i = 0;
+    vec_push(inits, arr_elem_initr(ident, i++));
+    while (consume(',')) {
+      vec_push(inits, arr_elem_initr(ident, i++));
+    }
+    expect('}');
+
+    // Resize the variable length array
+    // (e.g. a[] = {1, 2, 3} => Resize the length of a to three)
+    if (var->ty->ty == TY_ARR && var->ty->len == -1) {
+      resize_arr(var->ty, inits->len);
+    }
+    return node;
+  }
+  Node *lhs = new_node_ident(var->name, var);
+  Node *rhs = assignment_expr();
+  return new_node('=', lhs, rhs);
+}
+
 static Node *init_declr(Type *ty) {
   Node *node = declr(ty);
   if (consume('=')) {
-    Node *lhs = new_node_ident(node->var->name, node->var);
-    Node *rhs = expr();
-    return new_node('=', lhs, rhs);
+    return initr(node);
   } else {
     return &node_null;
   }
