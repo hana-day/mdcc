@@ -226,8 +226,7 @@ static void gen_lval(Node *node) {
     return;
   }
   if (node->ty == ND_IDENT) {
-    emit("mov rax, rbp");
-    emit("sub rax, %d", node->var->offset);
+    emit("lea rax, [rbp - %d]", node->var->offset);
     emit("push rax");
     if (node->var->has_address) {
       emit("pop rax");
@@ -278,8 +277,7 @@ static void assign(Node *node) {
 
 static void gen_param_lval(Node *node) {
   assert(node->ty == ND_IDENT);
-  emit("mov rax, rbp");
-  emit("sub rax, %d", node->var->offset);
+  emit("lea rax, [rbp - %d]", node->var->offset);
   emit("push rax");
 }
 
@@ -379,8 +377,7 @@ static void emit_prologue(Node *func) {
 }
 
 static void emit_epilogue() {
-  emit("mov rsp, rbp");
-  emit("pop rbp");
+  emit("leave");
   emit("ret");
 }
 

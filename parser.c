@@ -118,13 +118,9 @@ static Node *primary_expr() {
   if (peek(pos)->ty == TK_NUM) {
     return new_node_num(peek(pos++)->val);
   }
-  if (peek(pos)->ty == '(') {
-    pos++;
+  if (consume('(')) {
     Node *node = expr();
-    if (peek(pos)->ty != ')') {
-      bad_token(peek(pos), "No closing parenthesis.");
-    }
-    pos++;
+    expect(')');
     return node;
   }
   return &node_null;
